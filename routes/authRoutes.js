@@ -9,11 +9,11 @@ const router = express.Router();
 console.log("inside he auth file")
 router.post('/register',register);
 router.post('/login',login);
-router.post('/add-location',addLocation);
-router.post('/get-locations',getLocations);
-router.post('/create-group',createGroup);
-router.post('/add-friend',addFriend);
-// router.post('/get-friends-location',getFriendLocations)
+router.post('/add-location',authenticateToken,addLocation);
+router.post('/get-locations',authenticateToken,getLocations);
+router.post('/create-group',authenticateToken,createGroup);
+router.post('/add-friend',authenticateToken,addFriend);
+router.post('/get-friends-location',authenticateToken,getFriendLocations)
 
 
 

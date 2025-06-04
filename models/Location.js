@@ -14,7 +14,10 @@ const locationSchema = new mongoose.Schema({
       required: true
     }
   },
-  category: { type: String },
+  experienceType: { type: String },
+  timeOfDay: { type: String },
+  moodBased: { type: String },
+  experienceType: { type: String },
   preference: { type: String },
   price: { type: Number },
   persons: { type: Number },

@@ -4,7 +4,7 @@ const Locations = require('../models/Location')
 const mongoose = require('mongoose');
 
 const addLocation = async (req, res) => {
-    const { name, latitude, longitude, category, preference, price, persons, username } = req.body;
+    const { name, latitude, longitude, experienceType, preference, price, persons, username,moodBased,timeOfDay } = req.body;
     try {
         console.log("the username is", username)
         let userExists = await User.findOne({ username });
@@ -16,7 +16,7 @@ const addLocation = async (req, res) => {
             name, location: {
                 type: 'Point',
                 coordinates: [longitude, latitude]
-            }, category, preference, price, persons, User: userExists._id
+            }, experienceType, preference, price, persons,moodBased,timeOfDay, User: userExists._id
         });
         res.status(201).json(newLocation);
 
