@@ -6,9 +6,9 @@ const mongoose = require('mongoose');
 const addLocation = async (req, res) => {
     const { name, latitude, longitude, experienceType, preference, price, persons, username,moodBased,timeOfDay } = req.body;
     try {
-        console.log("the username is", username)
+        // console.log("the username is", username)
         let userExists = await User.findOne({ username });
-        console.log(userExists);
+        // console.log(userExists);
         if (!userExists) {
             res.status(400).json({ message: 'The user is not found' });
         }
@@ -35,7 +35,7 @@ const getLocations = async (req, res) => {
         
         const userId = userExists._id;
         const locations = await Locations.find({ User: userId })
-        console.log(locations)
+        // console.log(locations)
         res.json({ locations: locations });
         
     }

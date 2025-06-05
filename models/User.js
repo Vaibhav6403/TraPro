@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],  
     default: 'user'           
   },
-  friends: [{type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  friends: [{type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 },{ timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -3,17 +3,21 @@ const {register,login} = require('../controllers/authController');
 const { authenticateToken, authorizeAdmin } = require('../middleware/middleware');
 const {createGroup} = require('../controllers/groupController')
 const {addLocation,getLocations} = require('../controllers/locationController')
-const {addFriend,getFriendLocations} = require('../controllers/friendController')
+const {sendFriendRequest,getFriendLocations,searchFriends,getFriends,getFriendRequests,acceptFriendRequest} = require('../controllers/friendController')
 const router = express.Router();
 
-console.log("inside he auth file")
+// console.log("inside he auth file")
 router.post('/register',register);
 router.post('/login',login);
 router.post('/add-location',authenticateToken,addLocation);
 router.post('/get-locations',authenticateToken,getLocations);
 router.post('/create-group',authenticateToken,createGroup);
-router.post('/add-friend',authenticateToken,addFriend);
+router.post('/add-friend',authenticateToken,sendFriendRequest);
+router.post('/search-friends',authenticateToken,searchFriends);
+router.post('/get-friend-requests',getFriendRequests)
+router.post('/accept-friend-request',acceptFriendRequest)
 router.post('/get-friends-location',authenticateToken,getFriendLocations)
+router.post('/get-friends',getFriends);
 
 
 
