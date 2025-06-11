@@ -1,60 +1,86 @@
-const Message = require('../models/Message')
-const Group = require('../models/Group')
+const User = require('../models/User')
 const WebSocket = require('ws');
+const Trip = require('../models/Trip');
+const Message = require("../models/Message")
 
-exports.handleMessage = async (ws,data,clients)=>{
-    const userId = ws.user.id;
-    // console.log(userId)
-    const dataToCheck = JSON.parse(data.toString());
-    if(dataToCheck.type = 'group_chat'){
-      const {content,groupName} = JSON.parse(data.toString());
-      const group = await Group.findOne({ name: groupName });
-      // console.log("the group is",group)
-      if (!group) {
-        return ws.send(JSON.stringify({ error: 'Group not found' }));
+exports.handleMessage = async (ws,data,clients,tripSubscriptions)=>{
+  let message;
+
+  try {
+    message = JSON.parse(data);
+  } catch (e) {
+    return console.error('Invalid JSON:', e);
+  }
+
+  const userId = ws.user.id;
+  console.log("handelmessage")
+  if (message.type === 'subscribe' && message.tripId) {
+   const tripId = message.tripId;
+    console.log("inside handelmessage")
+    try {
+      // Fetch trip from DB
+      const trip = await Trip.findById(tripId).select('members');
+      console.log("the trip is",trip)
+      if (!trip) {
+        return ws.send(JSON.stringify({ type: 'error', message: 'Trip not found' }));
       }
-      else{
-        
-        group.members.forEach((member)=>{
-          if(member._id.toString() != userId){
-            const memberGc = clients.get(member._id.toString() );
-            // console.log("the member is ready state", memberGc.readyState )
-             if (memberGc && memberGc.readyState === WebSocket.OPEN) {
-              memberGc.send(JSON.stringify({
-                            type: 'group_chat',
-                            groupId: group._id,
-                            from: userId,
-                            content: content,
-                            timestamp: new Date().toISOString()
-                          }))
-             }
-          }
-        })
+
+      // Check if user is a member
+      const isMember = trip.members.some(memberId => memberId.toString() === userId);
+      console.log("the member is",isMember)
+      if (!isMember) {
+        return ws.send(JSON.stringify({ type: 'error', message: 'Not authorized for this trip' }));
+      }
+
+      // Subscribe user to trip
+      console.log("the trip subscriptions are",tripSubscriptions)
+      if (!tripSubscriptions.has(tripId)) {
+        tripSubscriptions.set(tripId, new Set());
+      }
+      tripSubscriptions.get(tripId).add(userId);
+      console.log("the trip subscriptions after are",tripSubscriptions)
+
+      ws.send(JSON.stringify({ type: 'subscribed', tripId }));
+
+    } catch (err) {
+      console.error('Error fetching trip:', err);
+      ws.send(JSON.stringify({ type: 'error', message: 'Internal server error' }));
+    }
+    return;
+  }
+
+  if (message.type === 'chat' && message.tripId && message.content) {
+    const { tripId, content } = message;
+    console.log("the message is",content);
+    const members = tripSubscriptions.get(tripId);
+    console.log("the members of message is",members);
+    if (!members || !members.has(userId)) {
+      return ws.send(JSON.stringify({ type: 'error', message: 'Not subscribed to trip' }));
+    }
+   let {username} =  await User.findOne({_id:userId});
+    const chatMessage = {
+      type: 'chat',
+      tripId,
+      content,
+      senderId: userId,
+      senderName: username,
+      timestamp: Date.now()
+    };
+    console.log("the ws chat message is",username);
+    const saveMessage = new Message({
+                tripId:tripId,
+                senderId:userId,
+                senderName:username,
+                content:content
+            });
+    await saveMessage.save()
+    for (const memberId of members) {
+      console.log("the member is",memberId)
+      const clientWs = clients.get(memberId);
+      if (clientWs && clientWs.readyState === WebSocket.OPEN) {
+        // console.log("the clientWs is",clientWs);
+        clientWs.send(JSON.stringify(chatMessage));
       }
     }
-    else{
-      const {content,receiverId} = JSON.parse(data.toString());
-      const receiverSocket = clients.get(receiverId);
-      // console.log("receivers socket",receiverSocket)
-      if(receiverSocket){
-      receiverSocket.send(
-        JSON.stringify({
-        from: userId,
-        content: content,
-        timestamp: new Date().toISOString()
-      })
-      )   
-      const msg = new Message(
-        {
-        sender:ws.user.id,
-        receiver:receiverId,
-        content:content
-        }
-      )
-      msg.save()
-      }
-      else{
-        // console.log('the user is offline')
-      }
-    } 
+  }
 }

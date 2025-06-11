@@ -1,5 +1,7 @@
 const User = require("../models/User")
 const Location = require("../models/Location")
+const Trip = require("../models/Trip")
+const Message = require("../models/Message")
 
 const sendFriendRequest = async (req, res) => {
     try {
@@ -38,42 +40,42 @@ const sendFriendRequest = async (req, res) => {
 }
 
 const acceptFriendRequest = async (req, res) => {
-  try {
-    const { username, friendUsername } = req.body;
+    try {
+        const { username, friendUsername } = req.body;
 
-    const user = await User.findOne({ username });
-    const friend = await User.findOne({ username: friendUsername });
+        const user = await User.findOne({ username });
+        const friend = await User.findOne({ username: friendUsername });
 
-    if (!user || !friend) {
-      return res.status(404).json({ error: 'User(s) not found' });
-    }
-
-    if (!user.friendRequests.includes(friend._id)) {
-      return res.status(400).json({ error: 'No friend request found from this user' });
-    }
-
-    await Promise.all([
-      User.updateOne(
-        { _id: user._id },
-        {
-          $addToSet: { friends: friend._id },
-          $pull: { friendRequests: friend._id }
+        if (!user || !friend) {
+            return res.status(404).json({ error: 'User(s) not found' });
         }
-      ),
-      User.updateOne(
-        { _id: friend._id },
-        {
-          $addToSet: { friends: user._id }
+
+        if (!user.friendRequests.includes(friend._id)) {
+            return res.status(400).json({ error: 'No friend request found from this user' });
         }
-      )
-    ]);
 
-    res.status(200).json({ message: 'Friend request accepted' });
+        await Promise.all([
+            User.updateOne(
+                { _id: user._id },
+                {
+                    $addToSet: { friends: friend._id },
+                    $pull: { friendRequests: friend._id }
+                }
+            ),
+            User.updateOne(
+                { _id: friend._id },
+                {
+                    $addToSet: { friends: user._id }
+                }
+            )
+        ]);
 
-  } catch (error) {
-    console.error('Error accepting friend request:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+        res.status(200).json({ message: 'Friend request accepted' });
+
+    } catch (error) {
+        console.error('Error accepting friend request:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 const getFriendRequests = async (req, res) => {
@@ -81,13 +83,13 @@ const getFriendRequests = async (req, res) => {
         const { username } = req.body;
         const user = await User.findOne({ username: username }).populate('friendRequests');
         if (!user) return res.status(404).json({ error: 'User not found' });
-        console.log(user)
-        let friendRequestUsernames =[];
-         user.friendRequests.map((friend)=>[
+        // console.log(user)
+        let friendRequestUsernames = [];
+        user.friendRequests.map((friend) => [
             friendRequestUsernames.push(friend.username)
         ])
 
-        
+
         return res.json({ friendRequestUsernames })
     }
     catch (error) {
@@ -147,4 +149,63 @@ const getFriends = async (req, res) => {
     }
 }
 
-module.exports = { sendFriendRequest, getFriendLocations, searchFriends, getFriends, getFriendRequests,acceptFriendRequest }
+const createTrip = async (req, res) => {
+    try {
+        const { name, members,createdBy } = req.body;
+        if (!name || !members || !Array.isArray(members) || members.length === 0) {
+            return res.status(400).json({ message: 'Trip name and members are required.' });
+        }
+        const createdUser = await User.findOne({username:createdBy});
+        const users = await User.find({ username: { $in: members } });
+        // console.log("the users are",users)
+        if (users.length !== members.length) {
+            return res.status(404).json({ message: 'One or more members not found.' });
+        }
+        const memberIds = users.map(user=>user._id)
+        // console.log("the createdBy username is", createdUser)
+        const trip = new Trip({
+            createdBy:createdUser._id,
+            name,
+            members:memberIds,
+        });
+        // console.log("the trip is",trip)
+
+        await trip.save();
+
+        return res.status(201).json({ message: 'Trip created successfully', trip });
+    }
+    catch (error) {
+        res.status(500).json({message:"Internal server error in creating trip",error})
+    }
+}
+
+const getTrips = async (req,res)=>{
+    try{
+        const {username} = req.body;
+        const user = await User.findOne({ username: username });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const trips = await Trip.find({members:user._id});
+        // console.log("the trips are",trips)
+         res.json(trips);
+    }
+    catch(error){
+        console.error("the error in getTrips is",error);
+    }
+}
+
+const getTripMessages = async (req,res) => {
+    try{
+        const {tripId} = req.body;
+        console.log("the trip id is",tripId)
+        let messages = await Message.find({tripId:tripId}).sort({ timestamp: 1 });
+        console.log("the messages are",messages);
+        res.json(messages);
+
+    }
+    catch(error){
+        console.error("the error in get messages is",error);
+    }
+}
+
+module.exports = { sendFriendRequest, getFriendLocations, searchFriends, getFriends, getFriendRequests, acceptFriendRequest, createTrip,getTrips,getTripMessages }
