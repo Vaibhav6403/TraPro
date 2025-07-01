@@ -4,6 +4,7 @@
       <div class="navbar">
         <div class="navbar-pri">
           <ul>
+            <SearchBarPlaces @placeSend="setLocationFromSearch"/>
             <li
               @click="filterLocations(filter)"
               v-for="(filter, index) in filters"
@@ -13,7 +14,8 @@
               <i :class="filter.icon" class="me-1"></i> {{ filter.label }}
             </li>
             <div class="d-flex align-items-center me-2">
-              <i class="fa-solid fa-xmark me-1" @click="clearAllFilters" ></i> Clear All
+              <i class="fa-solid fa-xmark me-1" @click="clearAllFilters"></i>
+              Clear All
             </div>
             <div class="form-check form-switch ms-2">
               <input
@@ -32,8 +34,13 @@
           </ul>
         </div>
         <div class="navbar-profile">
-          <div class="navbar-search">
+          <div class="navbar-search d-flex justify-content-center align-items-center">
+            <template v-if="searchFriends">
             <SearchBar :userFriends="userFriends" />
+            </template>
+            <div >
+              <i class="fa-solid fa-user-group me-3"  @click="toggleSearchFriends" :class="{ 'active-icon': searchFriends }"></i>
+            </div>
           </div>
           <div class="notification-bell me-2">
             <i class="fa-solid fa-bell"></i>
@@ -60,7 +67,10 @@
           <button class="btn trip-btn me-2" @click="showCreateTripModal">
             <i class="fa-solid fa-bicycle"></i>
           </button>
-          <div class="profile-icon d-flex align-items-center" @click="profileOpen">
+          <div
+            class="profile-icon d-flex align-items-center"
+            @click="profileOpen"
+          >
             <div class="profile-icon-circle me-2">
               <img src="../assets/boy.png" />
             </div>
@@ -77,7 +87,8 @@
               </div>
               <div @click="logOut">
                 <i class="fa-solid fa-power-off me-1"></i>
-                Log Out</div>
+                Log Out
+              </div>
             </div>
           </div>
         </div>
@@ -103,6 +114,50 @@
               <label :for="option">{{ option }}</label>
             </li>
           </ul>
+          <div v-else-if="viewMoreInfo" class="location-detail">
+            <div
+              class="detail-header d-flex justify-content-between align-items-center"
+            >
+              <h4>{{ selectedLocation.name }}</h4>
+              <button @click="isEditing = !isEditing" class="edit-btn">
+                {{ isEditing ? "Cancel" : "Edit" }}
+              </button>
+            </div>
+
+            <img
+              v-if="selectedLocation?.image"
+              :src="selectedLocation.image.url"
+              alt="Location Image"
+              class="location-image"
+            />
+
+            <div class="location-info mt-3">
+              <div
+                class="info-group"
+                v-for="(label, key) in infoLabels"
+                :key="key"
+              >
+                <strong>{{ label }}:</strong>
+                <span v-if="!isEditing">{{
+                  selectedLocation[key] || "—"
+                }}</span>
+                <input
+                  v-else
+                  v-model="selectedLocation[key]"
+                  :placeholder="label"
+                  class="form-control mt-1"
+                />
+              </div>
+            </div>
+
+            <button
+              v-if="isEditing"
+              class="save-btn mt-3"
+              @click="editLocation"
+            >
+              Save Changes
+            </button>
+          </div>
           <ul v-else>
             <li
               v-for="(trip, index) in trips"
@@ -140,16 +195,17 @@
             left: popoverPosition.x + 'px',
           }"
         >
-          <h3>{{ selectedLocation.name }}</h3>
+          <h3>{{ selectedLocation.value }}</h3>
           <img
             :src="selectedLocation.image.url"
             alt="Location Image"
             class="card-img"
             v-if="selectedLocation?.image"
           />
-          <p>Category: {{ selectedLocation.category }}</p>
-          <p>{{ selectedLocation.price }}</p>
-          <button @click="selectedLocation = null">Close</button>
+          <p class="mt-2">Time to Visit: {{ selectedLocation.timeOfDay }}</p>
+          <p>Expense: {{ selectedLocation.price }}</p>
+          <button @click="closeLocationInfo">Close</button>
+          <button @click="viewLocationInfo">View More</button>
         </div>
         <div v-if="!selectedTrip">
           <div id="map"></div>
@@ -489,6 +545,7 @@ import {
 } from "../webSocket";
 import Navbar from "./Navbar.vue";
 import SearchBar from "./SearchBar.vue";
+import SearchBarPlaces from "./SearchBarPlaces.vue";
 const modalInstance = ref(null);
 const map = ref(null);
 const isMenuOpen = ref(false);
@@ -564,7 +621,7 @@ const filters = reactive([
   { label: "Transport", icon: "fa-solid fa-car" },
   { label: "location", icon: "fa-solid fa-location-crosshairs" },
 ]);
-const selectedLocation = ref(null);
+const selectedLocation = ref("");
 const popoverPosition = ref({ x: 0, y: 0 });
 const userInfo = reactive({
   username: "",
@@ -582,20 +639,26 @@ const selectedTrip = ref(null);
 const chatInput = ref("");
 const selectedFilter = ref("");
 const appliedFilters = reactive({
-   Mood: [],
+  Mood: [],
   Preference: [],
   Transport: [],
   "Spot Highlights": [],
   Time: [],
   location: [],
-  Price: []
+  Price: [],
 });
-const toggleSidebar = () => {
-  isSidebarCollapsed.value = !isSidebarCollapsed.value;
-  setTimeout(() => {
-    map.value.resize();
-  }, 300);
+const viewMoreInfo = ref(false);
+const isEditing = ref(false);
+const infoLabels = {
+  experienceType: "Experience Type",
+  modeOfTransport: "Transport",
+  moodBased: "Mood",
+  preference: "Preference",
+  timeOfDay: "Time to Visit",
+  price: "Expense",
+  recommendation: "Recommendation",
 };
+const searchFriends = ref(false);
 onMounted(() => {
   getUserLocation();
   let userId = localStorage.getItem("username");
@@ -618,334 +681,36 @@ onUnmounted(() => {
   clearInterval(intervalId);
 });
 
-const profileOpen = ()=>{
+// General Functions
+const toggleSidebar = () => {
+  debugger;
+  if (!isSidebarCollapsed.value && viewMoreInfo.value)
+    viewMoreInfo.value = !viewMoreInfo.value;
+  isSidebarCollapsed.value = !isSidebarCollapsed.value;
+
+  setTimeout(() => {
+    map.value.resize();
+  }, 300);
+};
+const profileOpen = () => {
   isProfileOpen.value = !isProfileOpen.value;
+};
+function toggleMenu() {
+  isMenuOpen.value = !isMenuOpen.value;
 }
-const showCreateTripModal = () => {
-  // debugger;
-  isShowTripModal.value = !isShowTripModal.value;
-
-  if (isShowTripModal.value) {
-    const tripmodal = document.getElementById("createTripModal");
-    const tripmodalInstance = new Modal(tripmodal);
-    tripmodalInstance.show();
-  }
-};
-const handleFileChange = (event) => {
-  locationData.selectedFile = event.target.files[0];
-};
-const handleTripFileChange = (event) => {
-  tripData.selectedFile = event.target.files[0];
-};
-const getFilterOptions = (filterLabel) => {
-  switch (filterLabel) {
-    case "Spot Highlights":
-      return locationData.experienceOptions;
-    case "Preference":
-      return locationData.preferenceOptions;
-    case "Mood":
-      return locationData.moodOptions;
-    case "Time":
-      return locationData.timeOfDayOptions;
-    case "Transport":
-      return locationData.modeOfTransportOptions;
-    case "Price":
-      return ["Free", "Budget", "Moderate", "Expensive"];
-    case "location":
-      return locationData.locationTypeOptions;
-    default:
-      return [];
-  }
-};
-
-async function openTripChat(trip) {
-  // debugger;
-  selectedTrip.value = trip;
-  // subscribeToTrip(trip._id);
-  const request = {
-    tripId: trip._id,
-  };
-  let response = await axios.post(
-    "http://localhost:5002/api/user/get-trip-messages",
-    request,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    }
-  );
-  // debugger;
-  // Ensure message array exists
-  if (!tripMessages.value[trip._id]) {
-    tripMessages.value[trip._id] = response.data;
+function togglePointer(value) {
+  pointerMode.value = value;
+  if (pointerMode.value == "current") {
+    const modalEl = document.getElementById("exampleModal");
+    modalInstance.value = new Modal(modalEl);
+    locationData.latitude = coordinatesCurr.lat;
+    locationData.longitude = coordinatesCurr.lon;
+    modalInstance.value.show();
   }
 }
-function sendMessage() {
-  if (!chatInput.value || !selectedTrip.value) return;
-
-  const msg = {
-    type: "chat",
-    tripId: selectedTrip.value._id,
-    content: chatInput.value,
-  };
-
-  socket.value.send(JSON.stringify(msg));
-  chatInput.value = "";
-}
-const createTrip = async () => {
-  // debugger;
-  try {
-    tripData.members.push(locationData.username);
-    const formData = new FormData();
-    formData.append("createdBy", locationData.username);
-    formData.append("name", tripData.name);
-    tripData.members.forEach((member) => {
-      formData.append("members", member);
-    });
-    formData.append("image", tripData.selectedFile);
-    // const request = {
-    //   createdBy: locationData.username,
-    //   name: tripData.name,
-    //   members: tripData.members,
-    // };
-    let response = await axios.post(
-      "http://localhost:5002/api/user/create-trip",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-  } catch (error) {
-    console.error("the error in creating trip is", error);
-  }
+const toggleSearchFriends = () => {
+  searchFriends.value = !searchFriends.value;
 };
-const getTrips = async () => {
-  try {
-    const request = {
-      username: locationData.username,
-    };
-    let response = await axios.post(
-      "http://localhost:5002/api/user/get-trips",
-      request,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    console.log(response);
-    trips.value = response.data;
-  } catch (error) {
-    console.error("the error in creating trip is", error);
-  }
-};
-const acceptFriendRequest = async (friendUsername) => {
-  try {
-    let request = {
-      username: locationData.username,
-      friendUsername: friendUsername,
-    };
-    let response = await axios.post(
-      "http://localhost:5002/api/user/accept-friend-request",
-      request,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    // debugger;
-    if (response.status === 200) {
-      friendRequests.value = friendRequests.value.filter(
-        (username) => username !== friendUsername
-      );
-    }
-    console.log(response);
-  } catch (error) {
-    console.error("the error in accept friend request is", error);
-  }
-};
-
-const getFriendRequests = async () => {
-  try {
-    let request = {
-      username: locationData.username,
-    };
-    let response = await axios.post(
-      "http://localhost:5002/api/user/get-friend-requests",
-      request,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    friendRequests.value = response.data.friendRequestUsernames;
-  } catch (error) {
-    console.error("the error in the getting friend request is", error);
-  }
-};
-const intervalId = setInterval(getFriendRequests, 10000);
-
-const getUserFriends = async () => {
-  try {
-    let request = {
-      username: locationData.username,
-    };
-    let response = await axios.post(
-      "http://localhost:5002/api/user/get-friends",
-      request,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    userFriends.value = response.data.userFriends.map(
-      (friend) => friend.username
-    );
-  } catch (error) {
-    console.error("the error in the get user friends is", error);
-  }
-};
-const friendRequestsCheck = () => {
-  return friendRequests.value && friendRequests.value.length > 0;
-};
-const getLocations = async () => {
-  try {
-    let request = {
-      username: locationData.username,
-    };
-    const response = await axios.post(
-      "http://localhost:5002/api/user/get-locations",
-      request,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    locations.value = response.data.locations;
-    createMarkers(locations.value);
-
-    console.log(response);
-  } catch (error) {
-    console.error("the error occured is", error);
-  }
-};
-
-const createMarkers = (locations) => {
-  // debugger;
-  locations.forEach((location) => {
-    let locationCor = location.location.coordinates;
-    const markerEl = document.createElement("img");
-    switch (location.recommendation) {
-      case "Recommended":
-        markerEl.src = mapMarkerStar;
-        break;
-      case "Visited":
-        markerEl.src = locationPin;
-        break;
-      case "Not to visit":
-        markerEl.src = crossmapmarker;
-        break;
-      default:
-        markerEl.src = markerImage;
-    }
-    markerEl.style.width = "30px";
-    markerEl.style.height = "30px";
-    markerEl.dataset.id = location._id;
-    let marker = new maplibregl.Marker({ element: markerEl })
-      .setLngLat(locationCor)
-      .addTo(map.value);
-    marker.location = location;
-    markerEl.addEventListener("click", () => {
-      selectedLocation.value = location;
-
-      const [lng, lat] = location.location.coordinates;
-      const point = map.value.project([lng, lat]);
-
-      popoverPosition.value = { x: point.x, y: point.y };
-    });
-    markers.push(marker);
-  });
-};
-
-const filterLocations = (location) => {
-  // debugger
-  if(selectedFilter.value == location.label)selectedFilter.value = "";
-  else{
-  selectedFilter.value = location.label;
-  }
-};
-const mapFilterKey = (filterLabel) =>{
-   const map = {
-    "Spot Highlights": "experienceType",
-    Preference: "preference",
-    Mood: "moodBased",
-    Time: "timeOfDay",
-    Price: "price",
-    Transport: "modeOfTransport",
-    location: "locationType"
-  };
-  return map[filterLabel] || null;
-}
-const applyFilters = () => {
-  debugger
-  markers.forEach((marker) => {
-    const location = marker.location; // full location object from your data
-
-    let isVisible = true;
-    for (let filterLabel in appliedFilters) {
-      const selectedValues = appliedFilters[filterLabel];
-      const field = mapFilterKey(filterLabel);
-      if (!field || !selectedValues.length) continue;
-
-      const value = location[field];
-      if (!selectedValues.includes(value)) {
-        isVisible = false;
-        break;
-      }
-    }
-
-    marker.getElement().style.display = isVisible ? "block" : "none";
-  });
-};
-
-const clearAllFilters = () => {
-  for (const key in appliedFilters) {
-    appliedFilters[key] = [];
-  }
-  applyFilters();
-};
-
-function getUserLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        coordinatesCurr.lat = position.coords.latitude;
-        coordinatesCurr.lon = position.coords.longitude;
-        initMap([coordinatesCurr.lon, coordinatesCurr.lat]);
-      },
-      (error) => {
-        console.warn("Geolocation error:", error.message);
-        initMap([-0.1278, 51.5074]); // Fallback to London
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  } else {
-    alert("Geolocation is not supported by your browser.");
-    initMap([-0.1278, 51.5074]); // Fallback to London
-  }
-}
-
 function initMap(centerCoords) {
   if (map.value) {
     map.value.remove();
@@ -1008,20 +773,287 @@ function initMap(centerCoords) {
   //   }
   // });
 }
-
-function toggleMenu() {
-  isMenuOpen.value = !isMenuOpen.value;
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
 }
-function togglePointer(value) {
-  pointerMode.value = value;
-  if (pointerMode.value == "current") {
-    const modalEl = document.getElementById("exampleModal");
-    modalInstance.value = new Modal(modalEl);
-    locationData.latitude = coordinatesCurr.lat;
-    locationData.longitude = coordinatesCurr.lon;
-    modalInstance.value.show();
+const socialModeChange = debounce(async () => {
+  debugger;
+  socialmode.value = !socialmode.value;
+  if (socialmode.value) {
+    try {
+      let request = {
+        username: locationData.username,
+      };
+      let response = await axios.post(
+        "http://localhost:5002/api/user/get-friends-location",
+        request,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      createMarkers(response?.data?.locations);
+    } catch (error) {}
+  } else {
+    getLocations();
+  }
+}, 300);
+const logOut = async () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("username");
+  router.push("/login");
+};
+const handleFileChange = (event) => {
+  locationData.selectedFile = event.target.files[0];
+};
+
+// Trip and chat Functions
+const createTrip = async () => {
+  // debugger;
+  try {
+    tripData.members.push(locationData.username);
+    const formData = new FormData();
+    formData.append("createdBy", locationData.username);
+    formData.append("name", tripData.name);
+    tripData.members.forEach((member) => {
+      formData.append("members", member);
+    });
+    formData.append("image", tripData.selectedFile);
+    // const request = {
+    //   createdBy: locationData.username,
+    //   name: tripData.name,
+    //   members: tripData.members,
+    // };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/create-trip",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+  } catch (error) {
+    console.error("the error in creating trip is", error);
+  }
+};
+const getTrips = async () => {
+  try {
+    const request = {
+      username: locationData.username,
+    };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/get-trips",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    console.log(response);
+    trips.value = response.data;
+  } catch (error) {
+    console.error("the error in creating trip is", error);
+  }
+};
+const showCreateTripModal = () => {
+  // debugger;
+  isShowTripModal.value = !isShowTripModal.value;
+
+  if (isShowTripModal.value) {
+    const tripmodal = document.getElementById("createTripModal");
+    const tripmodalInstance = new Modal(tripmodal);
+    tripmodalInstance.show();
+  }
+};
+const handleTripFileChange = (event) => {
+  tripData.selectedFile = event.target.files[0];
+};
+async function openTripChat(trip) {
+  // debugger;
+  selectedTrip.value = trip;
+  // subscribeToTrip(trip._id);
+  const request = {
+    tripId: trip._id,
+  };
+  let response = await axios.post(
+    "http://localhost:5002/api/user/get-trip-messages",
+    request,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+  );
+  // debugger;
+  // Ensure message array exists
+  if (!tripMessages.value[trip._id]) {
+    tripMessages.value[trip._id] = response.data;
   }
 }
+function sendMessage() {
+  if (!chatInput.value || !selectedTrip.value) return;
+
+  const msg = {
+    type: "chat",
+    tripId: selectedTrip.value._id,
+    content: chatInput.value,
+  };
+
+  socket.value.send(JSON.stringify(msg));
+  chatInput.value = "";
+}
+
+// Friend Functions
+const acceptFriendRequest = async (friendUsername) => {
+  try {
+    let request = {
+      username: locationData.username,
+      friendUsername: friendUsername,
+    };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/accept-friend-request",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    // debugger;
+    if (response.status === 200) {
+      friendRequests.value = friendRequests.value.filter(
+        (username) => username !== friendUsername
+      );
+    }
+    console.log(response);
+  } catch (error) {
+    console.error("the error in accept friend request is", error);
+  }
+};
+const getFriendRequests = async () => {
+  try {
+    let request = {
+      username: locationData.username,
+    };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/get-friend-requests",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    friendRequests.value = response.data.friendRequestUsernames;
+  } catch (error) {
+    console.error("the error in the getting friend request is", error);
+  }
+};
+const intervalId = setInterval(getFriendRequests, 10000);
+
+const getUserFriends = async () => {
+  try {
+    let request = {
+      username: locationData.username,
+    };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/get-friends",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    userFriends.value = response.data.userFriends.map(
+      (friend) => friend.username
+    );
+  } catch (error) {
+    console.error("the error in the get user friends is", error);
+  }
+};
+const friendRequestsCheck = () => {
+  return friendRequests.value && friendRequests.value.length > 0;
+};
+
+// Filter Functions
+const filterLocations = (location) => {
+  // debugger
+  if (selectedFilter.value == location.label) selectedFilter.value = "";
+  else {
+    selectedFilter.value = location.label;
+  }
+};
+const getFilterOptions = (filterLabel) => {
+  switch (filterLabel) {
+    case "Spot Highlights":
+      return locationData.experienceOptions;
+    case "Preference":
+      return locationData.preferenceOptions;
+    case "Mood":
+      return locationData.moodOptions;
+    case "Time":
+      return locationData.timeOfDayOptions;
+    case "Transport":
+      return locationData.modeOfTransportOptions;
+    case "Price":
+      return ["Free", "Budget", "Moderate", "Expensive"];
+    case "location":
+      return locationData.locationTypeOptions;
+    default:
+      return [];
+  }
+};
+const mapFilterKey = (filterLabel) => {
+  const map = {
+    "Spot Highlights": "experienceType",
+    Preference: "preference",
+    Mood: "moodBased",
+    Time: "timeOfDay",
+    Price: "price",
+    Transport: "modeOfTransport",
+    location: "locationType",
+  };
+  return map[filterLabel] || null;
+};
+const applyFilters = () => {
+  debugger;
+  markers.forEach((marker) => {
+    const location = marker.location; // full location object from your data
+
+    let isVisible = true;
+    for (let filterLabel in appliedFilters) {
+      const selectedValues = appliedFilters[filterLabel];
+      const field = mapFilterKey(filterLabel);
+      if (!field || !selectedValues.length) continue;
+
+      const value = location[field];
+      if (!selectedValues.includes(value)) {
+        isVisible = false;
+        break;
+      }
+    }
+
+    marker.getElement().style.display = isVisible ? "block" : "none";
+  });
+};
+const clearAllFilters = () => {
+  for (const key in appliedFilters) {
+    appliedFilters[key] = [];
+  }
+  applyFilters();
+};
+
+// Location Functions
 const addLocation = async () => {
   const formData = new FormData();
   let request = {
@@ -1073,34 +1105,156 @@ const addLocation = async () => {
     console.error(error);
   }
 };
-const socialModeChange = async () => {
-  // debugger;
-  socialmode.value = !socialmode.value;
-  if (socialmode) {
-    try {
-      let request = {
-        username: locationData.username,
-      };
-      let response = await axios.post(
-        "http://localhost:5002/api/user/get-friends-location",
-        request,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      createMarkers(response?.data?.locations);
-    } catch (error) {}
+function getUserLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        coordinatesCurr.lat = position.coords.latitude;
+        coordinatesCurr.lon = position.coords.longitude;
+        initMap([coordinatesCurr.lon, coordinatesCurr.lat]);
+      },
+      (error) => {
+        console.warn("Geolocation error:", error.message);
+        initMap([-0.1278, 51.5074]); // Fallback to London
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
   } else {
+    alert("Geolocation is not supported by your browser.");
+    initMap([-0.1278, 51.5074]); // Fallback to London
+  }
+}
+const getLocations = async () => {
+  try {
+    let request = {
+      username: locationData.username,
+    };
+    const response = await axios.post(
+      "http://localhost:5002/api/user/get-locations",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    locations.value = response.data.locations;
+    createMarkers(locations.value);
+
+    console.log(response);
+  } catch (error) {
+    console.error("the error occured is", error);
   }
 };
-const logOut = async () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("username");
-  router.push("/login");
+const createMarkers = (locations) => {
+  // debugger;
+  markers.forEach((marker) => marker.remove());
+  markers.length = 0;
+  locations.forEach((location) => {
+    let locationCor = location.location.coordinates;
+    const markerEl = document.createElement("img");
+    switch (location.recommendation) {
+      case "Recommended":
+        markerEl.src = mapMarkerStar;
+        break;
+      case "Visited":
+        markerEl.src = locationPin;
+        break;
+      case "Not to visit":
+        markerEl.src = crossmapmarker;
+        break;
+      default:
+        markerEl.src = markerImage;
+    }
+    markerEl.style.width = "30px";
+    markerEl.style.height = "30px";
+    markerEl.dataset.id = location._id;
+    let marker = new maplibregl.Marker({ element: markerEl })
+      .setLngLat(locationCor)
+      .addTo(map.value);
+    marker.location = location;
+    markerEl.addEventListener("click", () => {
+      selectedLocation.value = location;
+
+      const [lng, lat] = location.location.coordinates;
+      const point = map.value.project([lng, lat]);
+
+      popoverPosition.value = { x: point.x, y: point.y };
+    });
+    markers.push(marker);
+  });
 };
+const viewLocationInfo = () => {
+  isSidebarCollapsed.value = false;
+  viewMoreInfo.value = true;
+};
+const closeLocationInfo = () => {
+  selectedLocation.value = "";
+  isSidebarCollapsed.value = true;
+  viewMoreInfo.value = false;
+};
+const editLocation = async () => {
+  try {
+    debugger;
+    const formData = new FormData();
+    let request = {
+      name: selectedLocation.value.name,
+      userId: selectedLocation.value.User,
+      latitude: selectedLocation.value.location.coordinates[1],
+      longitude: selectedLocation.value.location.coordinates[0],
+      category: selectedLocation.value.category,
+      preference: selectedLocation.value.preference,
+      price: selectedLocation.value.price,
+      locationId: selectedLocation.value._id,
+      experienceType: selectedLocation.value.experienceType,
+      moodBased: selectedLocation.value.moodBased,
+      timeOfDay: selectedLocation.value.timeOfDay,
+      modeOfTransport: selectedLocation.value.modeOfTransport,
+      recommendation: selectedLocation.value.recommendation,
+      locationType: selectedLocation.value.locationType,
+    };
+    for (const key in request) {
+      formData.append(key, request[key]);
+    }
+    if (selectedLocation.selectedFile) {
+      formData.append("image", selectedLocation.selectedFile);
+    }
+    const response = await axios.post(
+      "http://localhost:5002/api/user/edit-location",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    locations.value = [response.data];
+
+    console.log(response);
+  } catch (error) {
+    console.error("the error occured is", error);
+  }
+};
+const setLocationFromSearch = async (place) =>{
+  console.log("Place from search:", place);
+
+  const coordinates = [
+    parseFloat(place.lon ?? place.location?.coordinates?.[0]),
+    parseFloat(place.lat ?? place.location?.coordinates?.[1]),
+  ];
+
+  map.value.flyTo({
+    center: coordinates,
+    zoom: 14,
+    speed: 1.5,
+    curve: 1.4,
+  });
+
+}
 </script>
 
 <style scoped>
@@ -1305,12 +1459,53 @@ const logOut = async () => {
 }
 .custom-popover {
   position: absolute;
-  background: white;
-  padding: 12px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  width: 250px;
+  z-index: 1000;
+  font-family: "Segoe UI", sans-serif;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.custom-popover h3 {
+  margin-top: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.custom-popover .card-img {
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
   border-radius: 6px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  z-index: 999;
-  transform: translate(-50%, -100%); /* position above the marker */
+  object-fit: cover;
+}
+
+.custom-popover p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.custom-popover button {
+  margin-top: 10px;
+  margin-right: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #2e86de;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.custom-popover button:hover {
+  background-color: #1b4f72;
 }
 .user-search {
   position: relative;
@@ -1340,7 +1535,7 @@ const logOut = async () => {
 }
 .sidebar {
   position: relative;
-  width: 15vw;
+  width: 20vw;
   transition: width 0.3s ease;
 }
 .arrow-div {
@@ -1445,9 +1640,9 @@ const logOut = async () => {
   display: flex;
   align-items: center;
 }
-.profile-icon{
+.profile-icon {
   position: relative;
-   cursor: pointer;
+  cursor: pointer;
 }
 .profile-floating-div {
   position: absolute;
@@ -1546,5 +1741,53 @@ const logOut = async () => {
   height: 50px;
   width: 50px;
   border-radius: 50%;
+}
+.location-detail {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  overflow-y: auto;
+}
+
+.detail-header h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.edit-btn,
+.save-btn {
+  background-color: #2e86de;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.edit-btn:hover,
+.save-btn:hover {
+  background-color: #1b4f72;
+}
+
+.location-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.location-info .info-group {
+  margin: 10px 0;
+}
+
+.location-info input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.active-icon{
+  color: #e4e827;
 }
 </style>

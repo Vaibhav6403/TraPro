@@ -23,7 +23,6 @@ export function connectSocket(jwtToken) {
 
 // Subscribe to a trip
 export function subscribeToTrip(tripId) {
-    debugger
     if (socket.value?.readyState === WebSocket.OPEN) {
         socket.value.send(JSON.stringify({
             type: 'subscribe',
@@ -60,7 +59,6 @@ export function registerMessageHandler() {
                 if (!tripMessages.value[tripId]) {
                     tripMessages.value[tripId] = [];
                 }
-                debugger
                 tripMessages.value[tripId].push(data);
                 break;
             case 'subscribed':
