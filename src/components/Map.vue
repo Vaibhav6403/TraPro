@@ -12,6 +12,9 @@
               class="nav-filter me-2"
             >
               <i :class="filter.icon" class="me-1"></i> {{ filter.label }}
+              <span v-if="appliedFilterCheck(filter.label)" class="applied-filter-dot">
+                {{ appliedFilterCheck(filter.label) }}
+              </span>
             </li>
             <div class="d-flex align-items-center me-2">
               <i class="fa-solid fa-xmark me-1" @click="clearAllFilters"></i>
@@ -162,17 +165,30 @@
             <li
               v-for="(trip, index) in trips"
               :key="index"
-              @click="openTripChat(trip)"
             >
               <div class="d-flex align-items-center justify-content-around">
-                <div class="trip-profile">
+                <div class="trip-profile" v-if="!isAddLocationToTrip">
                   <img :src="trip.image.url" v-if="trip?.image" />
+                </div>
+                <div v-else>
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    :value="trip._id"
+                    v-model="selectedTripIds"
+                    @change="onTripSelectionChange(trip._id)"
+                  />
                 </div>
                 <div>
                   {{ trip.name }}
                 </div>
+                <div class="d-flex justify-content-around align-items-center">
+                  <div class="sidebar-buttons me-2" @click="getTrip(trip._id)"><i class="fa-solid fa-map-location-dot"></i></div>
+                  <div class="sidebar-buttons"  @click="openTripChat(trip)"><i class="fa-solid fa-comments"></i></div>
+                </div>
               </div>
             </li>
+            <div v-if="isAddLocationToTrip" @click="addLocationsToTrip"><button>Add Location To Trips</button></div>
           </ul>
         </div>
         <div class="arrow-div" @click="toggleSidebar">
@@ -206,6 +222,7 @@
           <p>Expense: {{ selectedLocation.price }}</p>
           <button @click="closeLocationInfo">Close</button>
           <button @click="viewLocationInfo">View More</button>
+          <button @click="addLocationToTrip"><i class="fa-solid fa-location-dot"></i></button>
         </div>
         <div v-if="!selectedTrip">
           <div id="map"></div>
@@ -659,6 +676,11 @@ const infoLabels = {
   recommendation: "Recommendation",
 };
 const searchFriends = ref(false);
+const isAddLocationToTrip = ref(false);
+const selectedTripIds= ref([]);
+
+
+
 onMounted(() => {
   getUserLocation();
   let userId = localStorage.getItem("username");
@@ -864,6 +886,64 @@ const getTrips = async () => {
     console.error("the error in creating trip is", error);
   }
 };
+const getTrip = async (tripId) =>{
+    try {
+    const request = {
+      tripId: tripId,
+    };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/get-trip",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    console.log(response);
+    markers.forEach((marker) => marker.remove());
+    markers.length = 0;
+    createMarkers(response.data.trip.locations)
+    drawTripLine(response.data.trip.locations); 
+
+  } catch (error) {
+    console.error("the error in creating trip is", error);
+  }
+}
+const drawTripLine = (locations) => {
+  const coordinates = locations.map(loc => loc.location.coordinates);
+
+  if (map.value.getSource('tripLine')) {
+    map.value.removeLayer('tripLineLayer');
+    map.value.removeSource('tripLine');
+  }
+
+  map.value.addSource('tripLine', {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: coordinates
+      }
+    }
+  });
+
+  map.value.addLayer({
+    id: 'tripLineLayer',
+    type: 'line',
+    source: 'tripLine',
+    layout: {
+      'line-join': 'round',
+      'line-cap': 'round'
+    },
+    paint: {
+      'line-color': '#DC143C', 
+      'line-width': 4,
+      'line-dasharray': [2, 4] 
+    }
+  });
+};
 const showCreateTripModal = () => {
   // debugger;
   isShowTripModal.value = !isShowTripModal.value;
@@ -879,6 +959,7 @@ const handleTripFileChange = (event) => {
 };
 async function openTripChat(trip) {
   // debugger;
+  if(!isAddLocationToTrip.value){
   selectedTrip.value = trip;
   // subscribeToTrip(trip._id);
   const request = {
@@ -899,6 +980,7 @@ async function openTripChat(trip) {
     tripMessages.value[trip._id] = response.data;
   }
 }
+}
 function sendMessage() {
   if (!chatInput.value || !selectedTrip.value) return;
 
@@ -910,6 +992,35 @@ function sendMessage() {
 
   socket.value.send(JSON.stringify(msg));
   chatInput.value = "";
+}
+const addLocationToTrip = async () =>{
+  isSidebarCollapsed.value = false;
+  isAddLocationToTrip.value = true;
+}
+const addLocationsToTrip = async () =>{
+  try {
+    const request = {
+      tripIds:selectedTripIds.value,
+      locationId:selectedLocation.value._id
+    };
+    let response = await axios.post(
+      "http://localhost:5002/api/user/add-location-to-trips",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    console.log(response);
+    isSidebarCollapsed.value = true;
+    isAddLocationToTrip.value = false;
+  } catch (error) {
+    console.error("the error in creating trip is", error);
+    isSidebarCollapsed.value = true;
+    isAddLocationToTrip.value = false;
+    selectedLocation.value = ''
+  }
 }
 
 // Friend Functions
@@ -1052,6 +1163,16 @@ const clearAllFilters = () => {
   }
   applyFilters();
 };
+const appliedFilterCheck = (filterLabel) =>{
+  return appliedFilters[filterLabel].length;
+  // let count = 0;
+  // appliedFilters[filterLabel].forEach((filters)=>{
+  //   filters.forEach((filter)=>{
+  //     if(filter == true)count++
+  //   })
+  // })
+  // return count;
+}
 
 // Location Functions
 const addLocation = async () => {
@@ -1528,6 +1649,21 @@ const setLocationFromSearch = async (place) =>{
   border-radius: 50%;
   border: 2px solid white;
 }
+.applied-filter-dot{
+  position: absolute;
+  top: -10px;
+    right: -5px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color:#1d1a1f;
+  border-radius: 50%;
+  border: 1px solid #e4e827;
+  color: #e4e827;
+}
 .main-content-container {
   width: 100%;
   height: 100vh;
@@ -1635,6 +1771,8 @@ const setLocationFromSearch = async (place) =>{
   padding: 2px 13px;
   border-radius: 15px;
   color: #1d1a1f;
+  cursor: pointer;
+  position: relative;
 }
 .navbar-profile {
   display: flex;
@@ -1738,8 +1876,8 @@ const setLocationFromSearch = async (place) =>{
   width: 100%;
 }
 .trip-profile img {
-  height: 50px;
-  width: 50px;
+  height: 35px;
+  width: 35px;
   border-radius: 50%;
 }
 .location-detail {
@@ -1789,5 +1927,11 @@ const setLocationFromSearch = async (place) =>{
 }
 .active-icon{
   color: #e4e827;
+}
+.sidebar-buttons{
+  padding: 7px;
+  border: 2px solid #1d1a1f;
+  border-radius: 15px;
+  background-color: #e4e827;
 }
 </style>
