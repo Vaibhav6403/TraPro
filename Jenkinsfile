@@ -14,19 +14,19 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                sh 'npm ci'  // uses package-lock.json for clean installs
+                bat 'npm ci'  // uses package-lock.json for clean installs
             }
         }
 
         stage('Lint') {
             steps {
-                sh 'npm run lint'  // optional, if you have linting setup
+                bat 'npm run lint'  // optional, if you have linting setup
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
 
