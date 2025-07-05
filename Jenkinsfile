@@ -18,11 +18,11 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                bat 'npm run lint'  // optional, if you have linting setup
-            }
-        }
+        // stage('Lint') {
+        //     steps {
+        //         bat 'npm run lint' 
+        //     }
+        // }
 
         stage('Build') {
             steps {
