@@ -26,7 +26,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'npx run build'
+                bat 'npm run build'
             }
         }
 
