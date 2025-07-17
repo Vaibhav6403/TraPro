@@ -8,7 +8,7 @@ export const tripMessages = ref({})
 
 // Connect to WebSocket
 export function connectSocket(jwtToken) {
-    socket.value = new WebSocket(`ws://localhost:5002?token=${jwtToken}`);
+    socket.value = new WebSocket(`ws:/${import.meta.env.VITE_API_URL}?token=${jwtToken}`);
 
     socket.value.onopen = () => {
         isConnected.value = true;
@@ -23,6 +23,7 @@ export function connectSocket(jwtToken) {
 
 // Subscribe to a trip
 export function subscribeToTrip(tripId) {
+    
     if (socket.value?.readyState === WebSocket.OPEN) {
         socket.value.send(JSON.stringify({
             type: 'subscribe',

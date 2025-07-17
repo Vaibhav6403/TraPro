@@ -43,7 +43,7 @@ export default {
     this.currentUserId = localStorage.getItem('userId'); // store this at login
     this.recipientId = 'TARGET_USER_ID'; // replace with dynamic ID in real app
 
-    this.socket = new WebSocket(`ws://localhost:5002?token=${token}`);
+    this.socket = new WebSocket(`ws://${import.meta.env.VITE_API_URL}:5002?token=${token}`);
 
     this.socket.onopen = () => {
       console.log('WebSocket connected');

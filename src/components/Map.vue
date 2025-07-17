@@ -3,94 +3,179 @@
     <div>
       <div class="navbar">
         <div class="navbar-pri">
-          <ul>
-            <SearchBarPlaces @placeSend="setLocationFromSearch"/>
-            <li
-              @click="filterLocations(filter)"
-              v-for="(filter, index) in filters"
-              :key="index"
-              class="nav-filter me-2"
-            >
-              <i :class="filter.icon" class="me-1"></i> {{ filter.label }}
-              <span v-if="appliedFilterCheck(filter.label)" class="applied-filter-dot">
-                {{ appliedFilterCheck(filter.label) }}
-              </span>
-            </li>
-            <div class="d-flex align-items-center me-2">
-              <i class="fa-solid fa-xmark me-1" @click="clearAllFilters"></i>
-              Clear All
+          <div class="navbar-content">
+            <div class="search-section">
+              <SearchBarPlaces @placeSend="setLocationFromSearch" />
             </div>
-            <div class="form-check form-switch ms-2">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="flexSwitchCheckDefault"
-                @change="socialModeChange"
-                :checked="socialmode"
-              />
-              <label class="form-check-label" for="flexSwitchCheckDefault"
-                >Social Mode</label
-              >
-            </div>
-            <!-- <button @click="logOut">LogOut</button> -->
-          </ul>
-        </div>
-        <div class="navbar-profile">
-          <div class="navbar-search d-flex justify-content-center align-items-center">
-            <template v-if="searchFriends">
-            <SearchBar :userFriends="userFriends" />
-            </template>
-            <div >
-              <i class="fa-solid fa-user-group me-3"  @click="toggleSearchFriends" :class="{ 'active-icon': searchFriends }"></i>
-            </div>
-          </div>
-          <div class="notification-bell me-2">
-            <i class="fa-solid fa-bell"></i>
-            <span v-if="friendRequestsCheck()" class="notification-dot"></span>
-          </div>
-          <ul
-            class="list-group position-absolute w-100 z-3 mt-1"
-            v-if="friendRequestsCheck()"
-          >
-            <li
-              v-for="(friend, index) in friendRequests"
-              :key="index"
-              class="list-group-item d-flex justify-content-between align-items-center"
-            >
-              <span>{{ friend }}</span>
-              <button
-                class="btn btn-sm btn-primary"
-                @click="acceptFriendRequest(friend)"
-              >
-                Accept Request
-              </button>
-            </li>
-          </ul>
-          <button class="btn trip-btn me-2" @click="showCreateTripModal">
-            <i class="fa-solid fa-bicycle"></i>
-          </button>
-          <div
-            class="profile-icon d-flex align-items-center"
-            @click="profileOpen"
-          >
-            <div class="profile-icon-circle me-2">
-              <img src="../assets/boy.png" />
-            </div>
-            <div v-if="!isProfileOpen">
-              <i class="fa-solid fa-angle-down"></i>
-            </div>
-            <div v-else>
-              <i class="fa-solid fa-angle-up"></i>
-            </div>
-            <div v-if="isProfileOpen" class="profile-floating-div">
-              <div>
-                <i class="fa-solid fa-user me-1"></i>
-                Edit Profile
+
+            <div class="filters-section">
+              <div class="filters-container">
+                <!-- Always visible filters (first 3) -->
+                <div class="visible-filters">
+                  <div
+                    v-for="(filter, index) in visibleFilters"
+                    :key="index"
+                    @click="filterLocations(filter)"
+                    class="nav-filter"
+                  >
+                    <i :class="filter.icon" class="filter-icon"></i>
+                    <span class="filter-label">{{ filter.label }}</span>
+                    <span
+                      v-if="appliedFilterCheck(filter.label)"
+                      class="applied-filter-dot"
+                    >
+                      {{ appliedFilterCheck(filter.label) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- More filters button -->
+                <div
+                  v-if="hiddenFilters.length > 0"
+                  class="more-filters-btn"
+                  @click="toggleFilters"
+                >
+                  <i class="fa-solid fa-ellipsis-h"></i>
+                </div>
+
+                <!-- Hidden filters (collapsible) -->
+                <div class="hidden-filters" :class="{ show: showAllFilters }">
+                  <div
+                    v-for="(filter, index) in hiddenFilters"
+                    :key="index + 3"
+                    @click="filterLocations(filter)"
+                    class="nav-filter"
+                  >
+                    <i :class="filter.icon" class="filter-icon"></i>
+                    <span class="filter-label">{{ filter.label }}</span>
+                    <span
+                      v-if="appliedFilterCheck(filter.label)"
+                      class="applied-filter-dot"
+                    >
+                      {{ appliedFilterCheck(filter.label) }}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div @click="logOut">
-                <i class="fa-solid fa-power-off me-1"></i>
-                Log Out
+
+              <!-- Clear all button -->
+              <div class="clear-all-btn" @click="clearAllFilters">
+                <i class="fa-solid fa-xmark"></i>
+                <span>Clear All</span>
+              </div>
+            </div>
+
+            <!-- Social mode toggle -->
+            <div class="social-toggle">
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  id="flexSwitchCheckDefault"
+                  @change="socialModeChange"
+                  :checked="socialmode"
+                />
+                <label class="form-check-label" for="flexSwitchCheckDefault">
+                  Social Mode
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="navbar-profile">
+          <!-- Friends search section -->
+          <div class="friends-search-section">
+            <div
+              class="search-friends-container"
+              :class="{ expanded: searchFriends }"
+            >
+              <template v-if="searchFriends">
+                <SearchBar :userFriends="userFriends" />
+              </template>
+            </div>
+            <div class="friends-toggle-btn" @click="toggleSearchFriends">
+              <i
+                class="fa-solid fa-user-group"
+                :class="{ 'active-icon': searchFriends }"
+              ></i>
+            </div>
+          </div>
+
+          <!-- Notification bell -->
+          <div class="notification-section">
+            <div class="notification-bell">
+              <i
+                class="fa-solid fa-bell pe-auto"
+                @click="showNotification(true)"
+              ></i>
+              <span
+                v-if="friendRequestsCheck()"
+                class="notification-dot"
+              ></span>
+            </div>
+
+            <!-- Friend requests dropdown -->
+            <div
+              class="friend-requests-dropdown"
+              v-if="friendRequestsCheck() && showNotificationDropdown"
+            >
+              <div
+                class="dropdown-header d-flex justify-content-between align-items-center"
+              >
+                <span>Friend Requests</span>
+                <i
+                  class="fa-solid fa-xmark"
+                  @click="showNotification(false)"
+                ></i>
+              </div>
+              <div
+                v-for="(friend, index) in friendRequests"
+                :key="index"
+                class="friend-request-item"
+              >
+                <div class="friend-info">
+                  <span class="friend-name">{{ friend }}</span>
+                </div>
+                <button class="accept-btn" @click="acceptFriendRequest(friend)">
+                  Accept
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trip button -->
+          <div class="trip-btn-container">
+            <button class="btn trip-btn" @click="showCreateTripModal">
+              <i class="fa-solid fa-bicycle"></i>
+              <span class="trip-btn-text">Trip</span>
+            </button>
+          </div>
+
+          <!-- Profile section -->
+          <div class="profile-section" ref="profileRef">
+            <div class="profile-icon" @click="profileOpen">
+              <div class="profile-icon-circle">
+                <img src="../assets/boy.png" alt="Profile" />
+              </div>
+              <div class="profile-arrow">
+                <i
+                  class="fa-solid"
+                  :class="isProfileOpen ? 'fa-angle-up' : 'fa-angle-down'"
+                ></i>
+              </div>
+
+              <!-- Profile dropdown -->
+              <div v-if="isProfileOpen" class="profile-floating-div">
+                <div class="profile-menu-item">
+                  <i class="fa-solid fa-user"></i>
+                  <span>Edit Profile</span>
+                </div>
+                <div class="profile-menu-item" @click="logOut">
+                  <i class="fa-solid fa-power-off"></i>
+                  <span>Log Out</span>
+                </div>
               </div>
             </div>
           </div>
@@ -98,79 +183,266 @@
       </div>
     </div>
     <div class="main-container d-flex">
+      <!-- Improved Sidebar -->
       <div class="sidebar" :class="{ collapsed: isSidebarCollapsed }">
-        <div class="trip-div" v-if="!isSidebarCollapsed">
-          <ul v-if="selectedFilter">
-            <li class="mb-2 fw-bold">{{ selectedFilter }} Options</li>
-            <li
-              v-for="(option, index) in getFilterOptions(selectedFilter)"
-              :key="index"
-            >
-              <input
-                type="checkbox"
-                :id="option"
-                :value="option"
-                v-model="appliedFilters[selectedFilter]"
-                class="me-2"
-                @change="applyFilters()"
-              />
-              <label :for="option">{{ option }}</label>
-            </li>
-          </ul>
-          <div v-else-if="viewMoreInfo" class="location-detail">
-            <div
-              class="detail-header d-flex justify-content-between align-items-center"
-            >
-              <h4>{{ selectedLocation.name }}</h4>
-              <button @click="isEditing = !isEditing" class="edit-btn">
+        <div class="sidebar-content" v-if="!isSidebarCollapsed">
+          <!-- Filter Options -->
+          <div class="sidebar-section" v-if="selectedFilter">
+            <div class="section-header">
+              <h6>
+                <i class="fas fa-filter me-2"></i>{{ selectedFilter }} Options
+              </h6>
+            </div>
+            <div class="filter-options">
+              <div
+                class="filter-option"
+                v-for="(option, index) in getFilterOptions(selectedFilter)"
+                :key="index"
+              >
+                <input
+                  type="checkbox"
+                  :id="option"
+                  :value="option"
+                  v-model="appliedFilters[selectedFilter]"
+                  class="form-check-input"
+                  @change="applyFilters()"
+                />
+                <label :for="option" class="filter-label">{{ option }}</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Detail -->
+          <div class="sidebar-section location-detail" v-else-if="viewMoreInfo">
+            <div class="section-header">
+              <h6>{{ selectedLocation.name }}</h6>
+              <button
+                @click="isEditing = !isEditing"
+                class="btn btn-sm btn-outline-primary edit-btn"
+              >
+                <i :class="isEditing ? 'fas fa-times' : 'fas fa-edit'"></i>
                 {{ isEditing ? "Cancel" : "Edit" }}
               </button>
             </div>
 
-            <img
+            <div
+              class="location-image-container"
               v-if="selectedLocation?.image"
-              :src="selectedLocation.image.url"
-              alt="Location Image"
-              class="location-image"
-            />
+            >
+              <img
+                :src="selectedLocation.image.url"
+                alt="Location Image"
+                class="location-image"
+              />
+            </div>
 
-            <div class="location-info mt-3">
-              <div
-                class="info-group"
-                v-for="(label, key) in infoLabels"
-                :key="key"
-              >
-                <strong>{{ label }}:</strong>
-                <span v-if="!isEditing">{{
-                  selectedLocation[key] || "—"
-                }}</span>
+            <div class="location-info">
+              <!-- Location Name -->
+              <div class="form-group mb-3">
+                <div >
+                  Location Name
+                </div>
+                <div v-if="!isEditing">{{ selectedLocation.name || "—" }}</div>
                 <input
                   v-else
-                  v-model="selectedLocation[key]"
-                  :placeholder="label"
-                  class="form-control mt-1"
+                  v-model="selectedLocation.name"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Location Name"
+                  required
+                />
+              </div>
+
+              <!-- Experience Type -->
+              <div class="form-group mb-3">
+                <div >Experience Type</div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.experienceType || "—" }}
+                </div>
+                <select
+                  v-else
+                  v-model="selectedLocation.experienceType"
+                  class="form-select form-select-sm"
+                  required
+                >
+                  <option
+                    v-for="option in locationData.experienceOptions"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Preference -->
+              <div class="form-group mb-3">
+                <div >Preference</div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.preference || "—" }}
+                </div>
+                <select
+                  v-else
+                  v-model="selectedLocation.preference"
+                  class="form-select form-select-sm"
+                >
+                  <option
+                    v-for="option in locationData.preferenceOptions"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Mood -->
+              <div class="form-group mb-3">
+                <div >Mood</div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.moodBased || "—" }}
+                </div>
+                <select
+                  v-else
+                  v-model="selectedLocation.moodBased"
+                  class="form-select form-select-sm"
+                >
+                  <option
+                    v-for="option in locationData.moodOptions"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Time of Day -->
+              <div class="form-group mb-3">
+                <div >Best Time to Visit</div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.timeOfDay || "—" }}
+                </div>
+                <select
+                  v-else
+                  v-model="selectedLocation.timeOfDay"
+                  class="form-select form-select-sm"
+                >
+                  <option
+                    v-for="option in locationData.timeOfDayOptions"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Transport -->
+              <div class="form-group mb-3">
+                <div >Mode of Transport</div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.modeOfTransport || "—" }}
+                </div>
+                <select
+                  v-else
+                  v-model="selectedLocation.modeOfTransport"
+                  class="form-select form-select-sm"
+                >
+                  <option
+                    v-for="option in locationData.modeOfTransportOptions"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Recommendation -->
+              <div class="form-group mb-3">
+                <div >Recommendation</div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.recommendation || "—" }}
+                </div>
+                <select
+                  v-else
+                  v-model="selectedLocation.recommendation"
+                  class="form-select form-select-sm"
+                >
+                  <option
+                    v-for="option in locationData.recommendationOptions"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Price -->
+              <div class="form-group mb-3">
+                <div class="info-label">
+                  Price Range
+                </div>
+                <div v-if="!isEditing">{{ selectedLocation.price || "—" }}</div>
+                <input
+                  v-else
+                  v-model="selectedLocation.price"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Price"
+                />
+              </div>
+
+              <div class="mt-2 mb-2">
+                    <StarComponent
+                      :maxStars="5"
+                      @update:rating="selectedRating = $event"
+                      :rating = "selectedLocation.rating"
+                    />
+                  </div>
+
+              <!-- Comments -->
+              <div class="form-group mb-3">
+                <div >
+                  Comments
+                </div>
+                <div v-if="!isEditing">
+                  {{ selectedLocation.comments || "—" }}
+                </div>
+                <input
+                  v-else
+                  v-model="selectedLocation.comments"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Comments"
                 />
               </div>
             </div>
 
+            <!-- Save Button -->
             <button
               v-if="isEditing"
-              class="save-btn mt-3"
+              class="accept-btn"
               @click="editLocation"
             >
-              Save Changes
+              <i class="fas fa-save me-2"></i>Save Changes
             </button>
           </div>
-          <ul v-else>
-            <li
-              v-for="(trip, index) in trips"
-              :key="index"
-            >
-              <div class="d-flex align-items-center justify-content-around">
-                <div class="trip-profile" v-if="!isAddLocationToTrip">
-                  <img :src="trip.image.url" v-if="trip?.image" />
-                </div>
-                <div v-else>
+
+          <!-- Trips List -->
+          <div class="sidebar-section trips-section" v-else>
+            <div class="section-header">
+              <h6><i class="fas fa-route me-2"></i>Your Trips</h6>
+            </div>
+            <div class="trips-list">
+              <div
+                class="trip-card"
+                v-for="(trip, index) in trips"
+                :key="index"
+              >
+                <div class="trip-selection" v-if="isAddLocationToTrip">
                   <input
                     type="checkbox"
                     class="form-check-input"
@@ -179,27 +451,67 @@
                     @change="onTripSelectionChange(trip._id)"
                   />
                 </div>
-                <div>
-                  {{ trip.name }}
+                <div class="trip-image" v-else>
+                  <img
+                    :src="trip.image.url"
+                    v-if="trip?.image"
+                    alt="Trip Image"
+                  />
+                  <div class="trip-placeholder" v-else>
+                    <i class="fas fa-image"></i>
+                  </div>
                 </div>
-                <div class="d-flex justify-content-around align-items-center">
-                  <div class="sidebar-buttons me-2" @click="getTrip(trip._id)"><i class="fa-solid fa-map-location-dot"></i></div>
-                  <div class="sidebar-buttons"  @click="openTripChat(trip)"><i class="fa-solid fa-comments"></i></div>
+                <div class="trip-info">
+                  <h6 class="trip-name">{{ trip.name }}</h6>
+                </div>
+                <div class="trip-actions">
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    @click="getTrip(trip._id)"
+                    title="View Trip"
+                  >
+                    <i class="fas fa-map-location-dot"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="openTripChat(trip)"
+                    title="Open Chat"
+                  >
+                    <i class="fas fa-comments"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="shareTrip(trip)"
+                    title="Share Trip"
+                  >
+                    <i class="fa-solid fa-share-nodes"></i>
+                  </button>
                 </div>
               </div>
-            </li>
-            <div v-if="isAddLocationToTrip" @click="addLocationsToTrip"><button>Add Location To Trips</button></div>
-          </ul>
+            </div>
+
+            <div class="add-to-trips-section" v-if="isAddLocationToTrip">
+              <button
+                class="btn btn-primary w-100"
+                @click="addLocationsToTrip"
+                :disabled="selectedTripIds.length === 0"
+              >
+                <i class="fas fa-plus me-2"></i>
+                Add to Selected Trips ({{ selectedTripIds.length }})
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="arrow-div" @click="toggleSidebar">
-          <i class="fa-solid fa-arrow-right"></i>
-        </div>
-        <div
-          class="arrow-div"
-          @click="toggleSidebar"
-          v-if="!isSidebarCollapsed"
-        >
-          <i class="fa-solid fa-arrow-left"></i>
+
+        <!-- Sidebar Toggle -->
+        <div class="sidebar-toggle" @click="toggleSidebar">
+          <i
+            :class="
+              isSidebarCollapsed
+                ? 'fas fa-chevron-right'
+                : 'fas fa-chevron-left'
+            "
+          ></i>
         </div>
       </div>
       <div class="main-content-container">
@@ -222,30 +534,149 @@
           <p>Expense: {{ selectedLocation.price }}</p>
           <button @click="closeLocationInfo">Close</button>
           <button @click="viewLocationInfo">View More</button>
-          <button @click="addLocationToTrip"><i class="fa-solid fa-location-dot"></i></button>
+          <button @click="addLocationToTrip">
+            <i class="fa-solid fa-location-dot"></i>
+          </button>
         </div>
-        <div v-if="!selectedTrip">
-          <div id="map"></div>
-        </div>
-        <div v-else class="chat-container">
-          <h5>Chat: {{ selectedTrip.name }}</h5>
-          <span>Close</span>
-          <div class="chat-box">
+        <div v-if="selectedTrip" class="chat-container">
+          <!-- Chat Header -->
+          <div class="chat-header">
+            <div class="chat-title">
+              <div class="trip-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                  ></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
+              <div>
+                <h5 class="chat-name">{{ selectedTrip.name }}</h5>
+                <span class="chat-subtitle">Trip Chat</span>
+              </div>
+            </div>
+            <button
+              class="close-btn"
+              @click="closeChat"
+              aria-label="Close chat"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Chat Messages -->
+          <div class="chat-messages" ref="chatMessages">
             <div
               v-for="(msg, i) in tripMessages[selectedTrip._id]"
               :key="i"
-              class="chat-message"
+              class="message-wrapper"
+              :class="{
+                'own-message': msg.senderName == locationData.username,
+              }"
             >
-              <strong>{{ msg.senderName }}:</strong> {{ msg.content }}
+              <div class="message-bubble">
+                <div class="message-header">
+                  <span class="sender-name">{{ msg.senderName }}</span>
+                  <span class="message-time">{{
+                    formatTime(msg.timestamp)
+                  }}</span>
+                </div>
+                <div class="message-content">{{ msg.content }}</div>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div
+              v-if="
+                !tripMessages[selectedTrip._id] ||
+                tripMessages[selectedTrip._id].length === 0
+              "
+              class="empty-state"
+            >
+              <div class="empty-icon">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                  ></path>
+                </svg>
+              </div>
+              <p class="empty-text">No messages yet</p>
+              <p class="empty-subtext">
+                Start the conversation about your trip!
+              </p>
             </div>
           </div>
-          <input
-            v-model="chatInput"
-            @keyup.enter="sendMessage"
-            placeholder="Type a message..."
-          />
+
+          <!-- Chat Input -->
+          <div class="chat-input-container">
+            <div class="input-wrapper">
+              <input
+                v-model="chatInput"
+                @keyup.enter="sendMessage"
+                placeholder="Type a message..."
+                class="chat-input"
+                :disabled="isLoading"
+              />
+              <button
+                @click="sendMessage"
+                class="send-btn"
+                :disabled="!chatInput.trim() || isLoading"
+                aria-label="Send message"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Typing indicator -->
+            <div v-if="isTyping" class="typing-indicator">
+              <span>Someone is typing</span>
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <MapComponent @onMountCall="updateMapOnChange" />
         </div>
 
+        <!-- Add Location Modal -->
         <div
           class="modal fade"
           id="exampleModal"
@@ -253,10 +684,12 @@
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
         >
-          <div class="modal-dialog">
+          <div class="modal-dialog modal-lg">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Add Location</h5>
+                <h5 class="modal-title" id="exampleModalLabel">
+                  <i class="fas fa-map-marker-alt me-2"></i>Add New Location
+                </h5>
                 <button
                   type="button"
                   class="btn-close"
@@ -265,147 +698,232 @@
                 ></button>
               </div>
               <div class="modal-body">
-                <div class="form-group">
-                  <input
-                    type="text"
-                    placeholder=" "
-                    id="name"
-                    v-model="locationData.name"
-                  />
-                  <label for="username">Name</label>
-                </div>
-                <div class="form-group">
-                  <label for="locationType" class="select-label"
-                    >Location Type</label
-                  >
-                  <select id="locationType" v-model="locationData.locationType">
-                    <option disabled value="">Select Location Type</option>
-                    <option
-                      v-for="option in locationData.locationOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="experienceType" class="select-label"
-                    >Experience Type</label
-                  >
-                  <select
-                    id="experienceType"
-                    v-model="locationData.experienceType"
-                  >
-                    <option disabled value="">Select experience</option>
-                    <option
-                      v-for="option in locationData.experienceOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
+                <form @submit.prevent="addLocation">
+                  <!-- Location Name -->
+                  <div class="form-group mb-3">
+                    <div class="input-wrapper">
+                      <input
+                        type="text"
+                        id="name"
+                        v-model="locationData.name"
+                        class="form-control"
+                        placeholder=" "
+                        required
+                      />
+                      <label for="name" class="floating-label">
+                        <i class="fas fa-location-dot me-2"></i>Location Name
+                      </label>
+                    </div>
+                  </div>
 
-                <!-- Preference -->
-                <div class="form-group">
-                  <label for="preference" class="select-label"
-                    >Preference</label
-                  >
-                  <select id="preference" v-model="locationData.preference">
-                    <option disabled value="">Select preference</option>
-                    <option
-                      v-for="option in locationData.preferenceOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
+                  <!-- Two Column Layout -->
+                  <div class="row">
+                    <div class="col-md-6">
+                      <!-- <div class="form-group mb-3">
 
-                <!-- Mood-based -->
-                <div class="form-group">
-                  <label for="moodBased" class="select-label">Mood-based</label>
-                  <select id="moodBased" v-model="locationData.moodBased">
-                    <option disabled value="">Select mood</option>
-                    <option
-                      v-for="option in locationData.moodOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
+                        <select
+                          id="locationType"
+                          v-model="locationData.locationType"
+                          class="form-select"
+                          required
+                        >
+                          <option
+                            v-for="option in locationData.locationOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div> -->
 
-                <!-- Time of Day -->
-                <div class="form-group">
-                  <label for="timeOfDay" class="select-label"
-                    >Time of Day</label
-                  >
-                  <select id="timeOfDay" v-model="locationData.timeOfDay">
-                    <option disabled value="">Select time</option>
-                    <option
-                      v-for="option in locationData.timeOfDayOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
+                      <!-- Experience Type -->
+                      <div class="form-group mb-3">
+                        <select
+                          id="experienceType"
+                          v-model="locationData.experienceType"
+                          class="form-select"
+                          required
+                        >
+                          <option value="" disabled selected hidden>
+                            Experience Type
+                          </option>
+                          <option
+                            v-for="option in locationData.experienceOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div>
 
-                <div class="form-group">
-                  <label for="timeOfDay" class="select-label"
-                    >Suitable Mode of Transport</label
-                  >
-                  <select
-                    id="modeOfTransport"
-                    v-model="locationData.modeOfTransport"
-                  >
-                    <option disabled value="">Select Mode of Transport</option>
-                    <option
-                      v-for="option in locationData.modeOfTransportOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="timeOfDay" class="select-label"
-                    >Add images:</label
-                  >
-                  <input
-                    type="file"
-                    @change="handleFileChange"
-                    accept="image/*"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="visited" class="select-label"
-                    >Recommendation:</label
-                  >
-                  <select
-                    id="recommended"
-                    v-model="locationData.recommendation"
-                  >
-                    <option disabled value="">Select Recommendation</option>
-                    <option
-                      v-for="option in locationData.recommendationOptions"
-                      :key="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <input
-                    type="text"
-                    placeholder=" "
-                    id="price"
-                    v-model="locationData.price"
-                  />
-                  <label for="price">Price</label>
-                </div>
+                      <!-- Preference -->
+                      <div class="form-group mb-3">
+                        <select
+                          id="preference"
+                          v-model="locationData.preference"
+                          class="form-select"
+                        >
+                          <option value="" disabled selected hidden>
+                            Preference
+                          </option>
+                          <option
+                            v-for="option in locationData.preferenceOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <!-- Mood-based -->
+                      <div class="form-group mb-3">
+                        <select
+                          id="moodBased"
+                          v-model="locationData.moodBased"
+                          class="form-select"
+                        >
+                          <option value="" disabled selected hidden>
+                            Mood
+                          </option>
+                          <option
+                            v-for="option in locationData.moodOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <!-- Time of Day -->
+                      <div class="form-group mb-3">
+                        <select
+                          id="timeOfDay"
+                          v-model="locationData.timeOfDay"
+                          class="form-select"
+                        >
+                          <option value="" disabled selected hidden>
+                            Best Time to Visit
+                          </option>
+                          <option
+                            v-for="option in locationData.timeOfDayOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <!-- Mode of Transport -->
+                      <div class="form-group mb-3">
+                        <select
+                          id="modeOfTransport"
+                          v-model="locationData.modeOfTransport"
+                          class="form-select"
+                        >
+                          <option value="" disabled selected hidden>
+                            Transportation
+                          </option>
+                          <option
+                            v-for="option in locationData.modeOfTransportOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <!-- Recommendation -->
+                      <div class="form-group mb-3">
+                        <select
+                          id="recommended"
+                          v-model="locationData.recommendation"
+                          class="form-select"
+                        >
+                          <option value="" disabled selected hidden>
+                            Recommendation
+                          </option>
+                          <option
+                            v-for="option in locationData.recommendationOptions"
+                            :key="option"
+                            :value="option"
+                          >
+                            {{ option }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <!-- Price -->
+                      <div class="form-group mb-3">
+                        <!-- <div class="input-wrapper"> -->
+                        <input
+                          type="text"
+                          id="price"
+                          v-model="locationData.price"
+                          class="form-control"
+                          placeholder=" "
+                        />
+                        <label for="price" class="floating-label">
+                          <i class="fas fa-dollar-sign me-2"></i>Price Range
+                        </label>
+                        <!-- </div> -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Rating -->
+                  <div class="mt-2 mb-2">
+                    <StarComponent
+                      :maxStars="5"
+                      @update:rating="selectedRating = $event"
+                      
+                    />
+                  </div>
+
+                  <!-- Comments -->
+                  <div class="form-group mb-3 mt-3">
+                    <!-- <div class="input-wrapper"> -->
+                    <input
+                      type="text"
+                      id="price"
+                      v-model="locationData.comments"
+                      class="form-control"
+                      placeholder=" "
+                    />
+                    <label for="price" class="floating-label">
+                      <i class="fa-solid fa-comment me-2"></i>Comments
+                    </label>
+                    <!-- </div> -->
+                  </div>
+
+                  <!-- Image Upload -->
+                  <div class="form-group mb-3">
+                    <label class="form-label">
+                      <i class="fas fa-camera me-2"></i>Add Images
+                    </label>
+                    <div class="file-upload-wrapper">
+                      <input
+                        type="file"
+                        @change="handleFileChange"
+                        accept="image/*"
+                        class="file-input"
+                        id="imageUpload"
+                        required
+                      />
+                      <label for="imageUpload" class="file-upload-label">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                        Choose Image or Drag & Drop
+                      </label>
+                    </div>
+                  </div>
+                </form>
               </div>
               <div class="modal-footer">
                 <button
@@ -413,14 +931,14 @@
                   class="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
-                  Close
+                  <i class="fas fa-times me-2"></i>Cancel
                 </button>
                 <button
                   type="button"
                   class="btn btn-primary"
                   @click="addLocation()"
                 >
-                  Add Location
+                  <i class="fas fa-plus me-2"></i>Add Location
                 </button>
               </div>
             </div>
@@ -438,7 +956,9 @@
           <div class="modal-dialog modal-lg">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="createTripLabel">Create a Trip</h5>
+                <h5 class="modal-title" id="createTripLabel">
+                  <i class="fas fa-route me-2"></i>Create New Trip
+                </h5>
                 <button
                   type="button"
                   class="btn-close"
@@ -447,57 +967,131 @@
                 ></button>
               </div>
               <div class="modal-body">
-                <input
-                  type="text"
-                  class="form-control mb-3"
-                  v-model="tripData.name"
-                  placeholder="Trip Name"
-                />
+                <form @submit.prevent="createTrip">
+                  <!-- Trip Name -->
+                  <div class="form-group mb-4">
+                    <div class="input-wrapper">
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="tripData.name"
+                        placeholder=" "
+                        id="tripName"
+                        required
+                      />
+                      <label for="tripName" class="floating-label">
+                        <i class="fas fa-map me-2"></i>Trip Name
+                      </label>
+                    </div>
+                  </div>
 
-                <label>Select Members:</label>
-                <div
-                  class="form-check"
-                  v-for="friend in userFriends"
-                  :key="friend"
-                >
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    :value="friend"
-                    v-model="tripData.members"
-                  />
-                  <label class="form-check-label">{{ friend }}</label>
-                </div>
-                <div class="form-group">
-                  <label for="timeOfDay" class="select-label"
-                    >Group Image</label
-                  >
-                  <input
-                    type="file"
-                    @change="handleTripFileChange"
-                    accept="image/*"
-                    required
-                  />
-                </div>
+                  <!-- Select Members -->
+                  <div class="form-group mb-4">
+                    <!-- <label class="form-label mb-3">
+                      <i class="fas fa-users me-2"></i>Select Travel Companions
+                    </label> -->
+                    <div class="members-grid">
+                      <div
+                        class="member-card"
+                        v-for="friend in userFriends"
+                        :key="friend"
+                        :class="{ selected: tripData.members.includes(friend) }"
+                        @click="toggleMember(friend)"
+                      >
+                        <div class="member-avatar">
+                          <i class="fas fa-user"></i>
+                        </div>
+                        <span class="member-name">{{ friend }}</span>
+                        <div class="member-checkbox">
+                          <input
+                            type="checkbox"
+                            :value="friend"
+                            v-model="tripData.members"
+                            class="form-check-input"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                <!-- Placeholder for chat -->
-                <div class="mt-3">
-                  <label>Group Chat (Coming Soon)</label>
-                  <textarea
-                    class="form-control"
-                    rows="3"
-                    disabled
-                    placeholder="Chat will be enabled after trip creation..."
-                  ></textarea>
-                </div>
+                  <!-- Group Image -->
+                  <div class="form-group mb-4">
+                    <!-- <label class="form-label">
+                      <i class="fas fa-image me-2"></i>Group Image
+                    </label> -->
+                    <div class="file-upload-wrapper">
+                      <input
+                        type="file"
+                        @change="handleTripFileChange"
+                        accept="image/*"
+                        class="file-input"
+                        id="tripImageUpload"
+                        required
+                      />
+                      <label for="tripImageUpload" class="file-upload-label">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                        Choose Group Image
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Group Chat Preview -->
+                  <div class="form-group mb-3">
+                    <label class="form-label">
+                      <i class="fas fa-comments me-2"></i>Group Chat
+                    </label>
+                    <div class="chat-preview">
+                      <div class="chat-placeholder">
+                        <i class="fas fa-comment-dots"></i>
+                        <p>Chat will be available after trip creation</p>
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
 
               <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">
-                  Cancel
+                  <i class="fas fa-times me-2"></i>Cancel
                 </button>
                 <button class="btn btn-primary" @click="createTrip">
-                  Create
+                  <i class="fas fa-plus me-2"></i>Create Trip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="modal fade"
+          id="shareTripModal"
+          tabindex="-1"
+          aria-labelledby="shareTripModal"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="createTripLabel">
+                  <i class="fas fa-route me-2"></i>Share Trip
+                </h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body">
+                <input :value="shareUrl" readonly  style="width: 100%;"/> 
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                  <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button class="btn btn-primary" @click="copyLink">
+                  <i class="fa-solid fa-copy"></i>Copy Link
                 </button>
               </div>
             </div>
@@ -505,7 +1099,7 @@
         </div>
 
         <!-- Social Clock Buttons -->
-        <div class="social-clock">
+        <div class="social-clock" v-if="!selectedTrip">
           <div class="social-clock__list" :class="{ open: isMenuOpen }">
             <button
               class="social-clock__button twitter"
@@ -528,7 +1122,7 @@
             @click="toggleMenu"
             aria-label="Toggle Menu"
           >
-            <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+            <!-- <svg xmlns="https://www.w3.org/2000/svg" viewBox="0 0 448 512">
           <path
             d="M352 224c53 0 96-43 96-96s-43-96-96-96s-96 43-96 96c0 4 .2 8 .7 11.9l-94.1 47C145.4 170.2 121.9 160 96 160c-53 0-96 43-96 96s43 96 96 96c25.9 0 49.4-10.2 66.6-26.9l94.1 47c-.5 3.9-.7 7.8-.7 11.9c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-25.9 0-49.4 10.2-66.6 26.9l-94.1-47c.5-3.9 .7-7.8 .7-11.9s-.2-8-.7-11.9l94.1-47C302.6 213.8 326.1 224 352 224z"
           ></path>
@@ -538,11 +1132,18 @@
         </div>
       </div>
     </div>
+    <NumberComponent
+      v-if="tripLocations.length"
+      :numbers="tripLocations.map((_, index) => index + 1)"
+      :active-index="selectedIndex"
+      :max-visible="7"
+      @button-click="flyToLocation"
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, reactive, onUnmounted } from "vue";
+import { onMounted, ref, reactive, onUnmounted, computed } from "vue";
 import maplibregl, { FormatExpression } from "maplibre-gl";
 import markerImage from "../assets/mapmarker.png";
 import crossmapmarker from "../assets/crossmapmarker.png";
@@ -551,6 +1152,7 @@ import locationPin from "../assets/location-pin.png";
 import { Modal } from "bootstrap";
 import axios from "axios";
 import { useRouter } from "vue-router";
+import NumberComponent from "./NumberComponent.vue";
 import {
   socket,
   connectSocket,
@@ -562,7 +1164,9 @@ import {
 } from "../webSocket";
 import Navbar from "./Navbar.vue";
 import SearchBar from "./SearchBar.vue";
+import MapComponent from "./MapComponent.vue";
 import SearchBarPlaces from "./SearchBarPlaces.vue";
+import StarComponent from "./StarComponent.vue";
 const modalInstance = ref(null);
 const map = ref(null);
 const isMenuOpen = ref(false);
@@ -592,6 +1196,7 @@ const locationData = reactive({
   recommendation: "",
   locationType: "",
   experienceOptions: [
+    "Experience Type",
     "Must-visit",
     "Scenic",
     "Hidden Gem",
@@ -626,6 +1231,8 @@ const locationData = reactive({
     "Hospital",
   ],
   selectedFile: null,
+  comments: "",
+  rating: "",
 });
 const markers = reactive([]);
 const isShowTripModal = ref(false);
@@ -677,10 +1284,16 @@ const infoLabels = {
 };
 const searchFriends = ref(false);
 const isAddLocationToTrip = ref(false);
-const selectedTripIds= ref([]);
-
-
-
+const selectedTripIds = ref([]);
+const showAllFilters = ref(false);
+const profileRef = ref(null);
+const tripLocations = ref([]);
+const selectedIndex = ref(null);
+const visibleFilters = computed(() => filters.slice(0, 3));
+const hiddenFilters = computed(() => filters.slice(3));
+const showNotificationDropdown = ref(true);
+const selectedRating = ref(0);
+const shareUrl = ref('');
 onMounted(() => {
   getUserLocation();
   let userId = localStorage.getItem("username");
@@ -697,18 +1310,44 @@ onMounted(() => {
     });
   }, 500);
   registerMessageHandler();
+  document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
   clearInterval(intervalId);
+  clearInterval(intervalIdFriends);
+  document.removeEventListener("click", handleClickOutside);
 });
 
 // General Functions
+const copyLink = ()=>{
+  navigator.clipboard.writeText(shareUrl.value);
+}
+const closeProfile = () => {
+  isProfileOpen.value = false;
+};
+const handleClickOutside = (event) => {
+  if (profileRef.value && !profileRef.value.contains(event.target)) {
+    closeProfile();
+  }
+};
+const showNotification = (value) => {
+  showNotificationDropdown.value = value;
+};
+
+const updateMapOnChange = () => {
+  getUserLocation();
+  getLocations();
+};
 const toggleSidebar = () => {
-  debugger;
   if (!isSidebarCollapsed.value && viewMoreInfo.value)
     viewMoreInfo.value = !viewMoreInfo.value;
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
+  if (tripLocations.value != "") {
+    tripLocations.value = "";
+    removeTripLine();
+    getLocations();
+  }
 
   setTimeout(() => {
     map.value.resize();
@@ -811,7 +1450,7 @@ const socialModeChange = debounce(async () => {
         username: locationData.username,
       };
       let response = await axios.post(
-        "http://localhost:5002/api/user/get-friends-location",
+        `http://${import.meta.env.VITE_API_URL}/api/user/get-friends-location`,
         request,
         {
           headers: {
@@ -834,8 +1473,24 @@ const logOut = async () => {
 const handleFileChange = (event) => {
   locationData.selectedFile = event.target.files[0];
 };
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  const paddedMinutes = minutes.toString().padStart(2, "0");
+  return `${hour12}:${paddedMinutes} ${ampm}`;
+};
+const toggleFilters = () => {
+  showAllFilters.value = !showAllFilters.value;
+};
+const closeChat = () => {
+  selectedTrip.value = null;
+};
 
 // Trip and chat Functions
+
 const createTrip = async () => {
   // debugger;
   try {
@@ -853,7 +1508,7 @@ const createTrip = async () => {
     //   members: tripData.members,
     // };
     let response = await axios.post(
-      "http://localhost:5002/api/user/create-trip",
+      `http://${import.meta.env.VITE_API_URL}/api/user/create-trip`,
       formData,
       {
         headers: {
@@ -872,7 +1527,7 @@ const getTrips = async () => {
       username: locationData.username,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/get-trips",
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-trips`,
       request,
       {
         headers: {
@@ -886,13 +1541,13 @@ const getTrips = async () => {
     console.error("the error in creating trip is", error);
   }
 };
-const getTrip = async (tripId) =>{
-    try {
+const getTrip = async (tripId) => {
+  try {
     const request = {
       tripId: tripId,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/get-trip",
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-trip`,
       request,
       {
         headers: {
@@ -901,48 +1556,75 @@ const getTrip = async (tripId) =>{
       }
     );
     console.log(response);
+    tripLocations.value = response.data.trip.locations;
     markers.forEach((marker) => marker.remove());
     markers.length = 0;
-    createMarkers(response.data.trip.locations)
-    drawTripLine(response.data.trip.locations); 
-
+    createMarkers(response.data.trip.locations);
+    drawTripLine(response.data.trip.locations);
   } catch (error) {
     console.error("the error in creating trip is", error);
   }
-}
-const drawTripLine = (locations) => {
-  const coordinates = locations.map(loc => loc.location.coordinates);
+};
+const flyToLocation = (index) => {
+  debugger;
+  const location = tripLocations.value[index - 1];
+  if (!location || !map.value) return;
 
-  if (map.value.getSource('tripLine')) {
-    map.value.removeLayer('tripLineLayer');
-    map.value.removeSource('tripLine');
+  selectedIndex.value = index;
+
+  const [lng, lat] = location.location.coordinates;
+  map.value.flyTo({
+    center: [lng, lat],
+    zoom: 14,
+    speed: 1.2,
+    curve: 1.42,
+    easing(t) {
+      return t;
+    },
+  });
+};
+const drawTripLine = (locations) => {
+  const coordinates = locations.map((loc) => loc.location.coordinates);
+
+  if (map.value.getSource("tripLine")) {
+    map.value.removeLayer("tripLineLayer");
+    map.value.removeSource("tripLine");
   }
 
-  map.value.addSource('tripLine', {
-    type: 'geojson',
+  map.value.addSource("tripLine", {
+    type: "geojson",
     data: {
-      type: 'Feature',
+      type: "Feature",
       geometry: {
-        type: 'LineString',
-        coordinates: coordinates
-      }
-    }
+        type: "LineString",
+        coordinates: coordinates,
+      },
+    },
   });
 
   map.value.addLayer({
-    id: 'tripLineLayer',
-    type: 'line',
-    source: 'tripLine',
+    id: "tripLineLayer",
+    type: "line",
+    source: "tripLine",
     layout: {
-      'line-join': 'round',
-      'line-cap': 'round'
+      "line-join": "round",
+      "line-cap": "round",
     },
     paint: {
-      'line-color': '#DC143C', 
-      'line-width': 4,
-      'line-dasharray': [2, 4] 
-    }
+      "line-color": "#DC143C",
+      "line-width": 4,
+      "line-dasharray": [2, 4],
+    },
   });
+};
+const removeTripLine = () => {
+  if (map.value.getLayer("tripLineLayer")) {
+    map.value.removeLayer("tripLineLayer");
+  }
+
+  if (map.value.getSource("tripLine")) {
+    map.value.removeSource("tripLine");
+  }
 };
 const showCreateTripModal = () => {
   // debugger;
@@ -959,27 +1641,27 @@ const handleTripFileChange = (event) => {
 };
 async function openTripChat(trip) {
   // debugger;
-  if(!isAddLocationToTrip.value){
-  selectedTrip.value = trip;
-  // subscribeToTrip(trip._id);
-  const request = {
-    tripId: trip._id,
-  };
-  let response = await axios.post(
-    "http://localhost:5002/api/user/get-trip-messages",
-    request,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+  if (!isAddLocationToTrip.value) {
+    selectedTrip.value = trip;
+    // subscribeToTrip(trip._id);
+    const request = {
+      tripId: trip._id,
+    };
+    let response = await axios.post(
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-trip-messages`,
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    // debugger;
+    // Ensure message array exists
+    if (!tripMessages.value[trip._id]) {
+      tripMessages.value[trip._id] = response.data;
     }
-  );
-  // debugger;
-  // Ensure message array exists
-  if (!tripMessages.value[trip._id]) {
-    tripMessages.value[trip._id] = response.data;
   }
-}
 }
 function sendMessage() {
   if (!chatInput.value || !selectedTrip.value) return;
@@ -993,18 +1675,18 @@ function sendMessage() {
   socket.value.send(JSON.stringify(msg));
   chatInput.value = "";
 }
-const addLocationToTrip = async () =>{
+const addLocationToTrip = async () => {
   isSidebarCollapsed.value = false;
   isAddLocationToTrip.value = true;
-}
-const addLocationsToTrip = async () =>{
+};
+const addLocationsToTrip = async () => {
   try {
     const request = {
-      tripIds:selectedTripIds.value,
-      locationId:selectedLocation.value._id
+      tripIds: selectedTripIds.value,
+      locationId: selectedLocation.value._id,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/add-location-to-trips",
+      `http://${import.meta.env.VITE_API_URL}/api/user/add-location-to-trips`,
       request,
       {
         headers: {
@@ -1019,9 +1701,37 @@ const addLocationsToTrip = async () =>{
     console.error("the error in creating trip is", error);
     isSidebarCollapsed.value = true;
     isAddLocationToTrip.value = false;
-    selectedLocation.value = ''
+    selectedLocation.value = "";
   }
-}
+};
+const shareTrip = async (trip) => {
+  debugger
+  const modalEl = document.getElementById("shareTripModal");
+  const shareTripModalInstance = new Modal(modalEl);
+  let request = {
+    username:locationData.username,
+    tripId:trip._id
+  }
+    try {
+    let response = await axios.post(
+      `http://${import.meta.env.VITE_API_URL}/api/user/share`,request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    debugger;
+    if (response.status === 200) {
+      const data =  response.data;
+    shareUrl.value = data.shareUrl;
+    }
+    console.log(response);
+  } catch (error) {
+    console.error("the error in accept friend request is", error);
+  }
+  shareTripModalInstance?.show();
+};
 
 // Friend Functions
 const acceptFriendRequest = async (friendUsername) => {
@@ -1031,7 +1741,7 @@ const acceptFriendRequest = async (friendUsername) => {
       friendUsername: friendUsername,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/accept-friend-request",
+      `http://${import.meta.env.VITE_API_URL}/api/user/accept-friend-request`,
       request,
       {
         headers: {
@@ -1056,7 +1766,7 @@ const getFriendRequests = async () => {
       username: locationData.username,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/get-friend-requests",
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-friend-requests`,
       request,
       {
         headers: {
@@ -1069,7 +1779,7 @@ const getFriendRequests = async () => {
     console.error("the error in the getting friend request is", error);
   }
 };
-const intervalId = setInterval(getFriendRequests, 10000);
+const intervalId = setInterval(getFriendRequests, 5000);
 
 const getUserFriends = async () => {
   try {
@@ -1077,7 +1787,7 @@ const getUserFriends = async () => {
       username: locationData.username,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/get-friends",
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-friends`,
       request,
       {
         headers: {
@@ -1092,6 +1802,7 @@ const getUserFriends = async () => {
     console.error("the error in the get user friends is", error);
   }
 };
+const intervalIdFriends = setInterval(getUserFriends, 5000);
 const friendRequestsCheck = () => {
   return friendRequests.value && friendRequests.value.length > 0;
 };
@@ -1099,6 +1810,7 @@ const friendRequestsCheck = () => {
 // Filter Functions
 const filterLocations = (location) => {
   // debugger
+  isSidebarCollapsed.value = !isSidebarCollapsed.value;
   if (selectedFilter.value == location.label) selectedFilter.value = "";
   else {
     selectedFilter.value = location.label;
@@ -1137,7 +1849,6 @@ const mapFilterKey = (filterLabel) => {
   return map[filterLabel] || null;
 };
 const applyFilters = () => {
-  debugger;
   markers.forEach((marker) => {
     const location = marker.location; // full location object from your data
 
@@ -1163,7 +1874,7 @@ const clearAllFilters = () => {
   }
   applyFilters();
 };
-const appliedFilterCheck = (filterLabel) =>{
+const appliedFilterCheck = (filterLabel) => {
   return appliedFilters[filterLabel].length;
   // let count = 0;
   // appliedFilters[filterLabel].forEach((filters)=>{
@@ -1172,7 +1883,7 @@ const appliedFilterCheck = (filterLabel) =>{
   //   })
   // })
   // return count;
-}
+};
 
 // Location Functions
 const addLocation = async () => {
@@ -1193,6 +1904,8 @@ const addLocation = async () => {
     modeOfTransport: locationData.modeOfTransport,
     recommendation: locationData.recommendation,
     locationType: locationData.locationType,
+    comments: locationData.comments,
+    rating: selectedRating.value,
   };
   for (const key in request) {
     formData.append(key, request[key]);
@@ -1200,7 +1913,7 @@ const addLocation = async () => {
   formData.append("image", locationData.selectedFile);
   try {
     let response = await axios.post(
-      "http://localhost:5002/api/user/add-location",
+      `http://${import.meta.env.VITE_API_URL}/api/user/add-location`,
       formData,
       {
         headers: {
@@ -1255,7 +1968,7 @@ const getLocations = async () => {
       username: locationData.username,
     };
     const response = await axios.post(
-      "http://localhost:5002/api/user/get-locations",
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-locations`,
       request,
       {
         headers: {
@@ -1337,6 +2050,8 @@ const editLocation = async () => {
       modeOfTransport: selectedLocation.value.modeOfTransport,
       recommendation: selectedLocation.value.recommendation,
       locationType: selectedLocation.value.locationType,
+      comments: selectedLocation.value.comments,
+      rating: selectedRating.value,
     };
     for (const key in request) {
       formData.append(key, request[key]);
@@ -1345,7 +2060,7 @@ const editLocation = async () => {
       formData.append("image", selectedLocation.selectedFile);
     }
     const response = await axios.post(
-      "http://localhost:5002/api/user/edit-location",
+      `http://${import.meta.env.VITE_API_URL}/api/user/edit-location`,
       formData,
       {
         headers: {
@@ -1360,7 +2075,7 @@ const editLocation = async () => {
     console.error("the error occured is", error);
   }
 };
-const setLocationFromSearch = async (place) =>{
+const setLocationFromSearch = async (place) => {
   console.log("Place from search:", place);
 
   const coordinates = [
@@ -1374,9 +2089,10 @@ const setLocationFromSearch = async (place) =>{
     speed: 1.5,
     curve: 1.4,
   });
-
-}
+};
 </script>
+
+
 
 <style scoped>
 #map {
@@ -1531,8 +2247,8 @@ const setLocationFromSearch = async (place) =>{
 }
 .form-group label {
   position: absolute;
-  left: 12px;
-  top: 12px;
+  left: 10px;
+  top: 10px;
   font-size: 14px;
   color: #777;
   transition: top 0.3s ease, font-size 0.3s ease, color 0.3s ease;
@@ -1649,17 +2365,17 @@ const setLocationFromSearch = async (place) =>{
   border-radius: 50%;
   border: 2px solid white;
 }
-.applied-filter-dot{
+.applied-filter-dot {
   position: absolute;
   top: -10px;
-    right: -5px;
+  right: -5px;
   width: 20px;
   height: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
 
-  background-color:#1d1a1f;
+  background-color: #1d1a1f;
   border-radius: 50%;
   border: 1px solid #e4e827;
   color: #e4e827;
@@ -1724,7 +2440,7 @@ const setLocationFromSearch = async (place) =>{
 .trip-div li:active {
   background-color: #d9d9d9;
 }
-.chat-container {
+/* .chat-container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1742,7 +2458,7 @@ const setLocationFromSearch = async (place) =>{
   padding: 1rem;
   background-color: white;
   margin-bottom: 1rem;
-  max-height: 500px; /* or use 100% if parent is constrained */
+  max-height: 500px; 
 }
 
 .chat-message {
@@ -1765,7 +2481,7 @@ const setLocationFromSearch = async (place) =>{
   font-size: 1rem;
   outline: none;
   width: 100%;
-}
+} */
 .nav-filter {
   background-color: #e4e827;
   padding: 2px 13px;
@@ -1914,7 +2630,10 @@ const setLocationFromSearch = async (place) =>{
   border-radius: 8px;
   margin-top: 10px;
 }
-
+.location-detail {
+  overflow-y: auto;
+  max-height: 90vh;
+}
 .location-info .info-group {
   margin: 10px 0;
 }
@@ -1925,13 +2644,873 @@ const setLocationFromSearch = async (place) =>{
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-.active-icon{
+.active-icon {
   color: #e4e827;
 }
-.sidebar-buttons{
+.sidebar-buttons {
   padding: 7px;
   border: 2px solid #1d1a1f;
   border-radius: 15px;
   background-color: #e4e827;
+}
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  padding-top: 4rem;
+}
+
+/* Chat Header */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trip-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.chat-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.chat-subtitle {
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* Chat Messages */
+.chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.message-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.message-wrapper.own-message {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 75%;
+  background: white;
+  border-radius: 18px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.own-message .message-bubble {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.8) 0%,
+    rgba(118, 75, 162, 0.8) 100%
+  );
+  color: white;
+  border-color: transparent;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+
+.sender-name {
+  font-weight: 600;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.own-message .sender-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.message-time {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.own-message .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message-content {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #374151;
+  word-wrap: break-word;
+}
+
+.own-message .message-content {
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-icon {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+  color: #374151;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  margin: 0;
+  color: #9ca3af;
+}
+
+/* Chat Input */
+.chat-input-container {
+  padding: 16px 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+.input-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  border-radius: 24px !important;
+  padding: 4px 4px 4px 16px !important;
+  border: 1px solid #e5e7eb !important;
+  transition: all 0.2s ease !important;
+}
+.input-wrapper input {
+  border: none;
+}
+
+.input-wrapper:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 12px 0;
+  color: #374151;
+}
+
+.chat-input::placeholder {
+  color: #9ca3af;
+}
+
+.send-btn {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.typing-dots span {
+  width: 4px;
+  height: 4px;
+  background: #9ca3af;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-container {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .message-bubble {
+    max-width: 85%;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+  }
+
+  .chat-messages {
+    padding: 16px;
+  }
+
+  .chat-input-container {
+    padding: 12px 16px;
+  }
+}
+
+.navbar {
+  position: fixed;
+  z-index: 500;
+  width: 100%;
+  background: linear-gradient(135deg, #1d1a1f 0%, #2a2530 100%);
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.navbar-pri {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Search Section */
+.search-section {
+  flex-shrink: 0;
+}
+
+/* Filters Section */
+.filters-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.visible-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-filter {
+  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: #1d1a1f;
+  cursor: pointer;
+  position: relative;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(228, 232, 39, 0.3);
+  border: 1px solid transparent;
+}
+
+.nav-filter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(228, 232, 39, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.filter-icon {
+  font-size: 12px;
+}
+
+.filter-label {
+  white-space: nowrap;
+}
+
+.more-filters-btn {
+  background: rgba(228, 232, 39, 0.2);
+  border: 1px solid #e4e827;
+  padding: 8px 12px;
+  border-radius: 20px;
+  color: #e4e827;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.more-filters-btn:hover {
+  background: #e4e827;
+  color: #1d1a1f;
+  transform: translateY(-2px);
+}
+
+.hidden-filters {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(29, 26, 31, 0.95);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(228, 232, 39, 0.3);
+  z-index: 1000;
+}
+
+.hidden-filters.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.clear-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.clear-all-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.applied-filter-dot {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1d1a1f;
+  border-radius: 50%;
+  border: 2px solid #e4e827;
+  color: #e4e827;
+  font-size: 11px;
+  font-weight: 700;
+  animation: pulse 2s infinite;
+}
+
+/* Social Toggle */
+.social-toggle {
+  margin-left: auto;
+}
+
+.form-switch .form-check-input {
+  width: 35px;
+  height: 20px;
+  background-color: #e4e827;
+  border: 2px solid #1d1a1f;
+  border-radius: 30px;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  cursor: pointer;
+}
+
+.form-switch .form-check-input::before {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  height: 14px;
+  width: 14px;
+  background-color: #1d1a1f;
+  border-radius: 50%;
+  transition: all 0.3s ease-in-out;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #1d1a1f;
+  border-color: #e4e827;
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translateX(15px);
+  background-color: #e4e827;
+}
+
+.form-check-label {
+  margin-left: 8px;
+  font-weight: 600;
+  color: #f8f9fa;
+  font-size: 14px;
+}
+
+/* Profile Section */
+.navbar-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.friends-search-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-friends-container {
+  max-width: 0;
+  transition: all 0.3s ease;
+}
+
+.search-friends-container.expanded {
+  max-width: 250px;
+}
+
+.friends-toggle-btn {
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  color: #e4e827;
+  font-size: 18px;
+}
+
+.friends-toggle-btn:hover {
+  background: rgba(228, 232, 39, 0.1);
+  transform: scale(1.1);
+}
+
+.active-icon {
+  color: #e4e827 !important;
+  transform: scale(1.2);
+}
+
+.notification-section {
+  position: relative;
+}
+
+.notification-bell {
+  position: relative;
+  display: inline-block;
+  font-size: 20px;
+  color: #e4e827;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.notification-bell:hover {
+  background: rgba(228, 232, 39, 0.1);
+  transform: scale(1.1);
+}
+
+.notification-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+.friend-requests-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 280px;
+  background: white;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 1050;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid rgba(228, 232, 39, 0.3);
+}
+
+.dropdown-header {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
+  color: #1d1a1f;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.friend-request-item {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.friend-request-item:hover {
+  background: #f8f9fa;
+}
+
+.friend-request-item:last-child {
+  border-bottom: none;
+}
+
+.friend-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.accept-btn {
+  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
+  color: #1d1a1f;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.accept-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(228, 232, 39, 0.4);
+}
+
+.trip-btn-container {
+  position: relative;
+}
+
+.trip-btn {
+  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
+  color: #1d1a1f;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(228, 232, 39, 0.3);
+}
+
+.trip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(228, 232, 39, 0.4);
+}
+
+.trip-btn-text {
+  font-size: 14px;
+}
+
+.profile-section {
+  position: relative;
+}
+
+.profile-icon {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.profile-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-icon-circle {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #e4e827;
+  transition: all 0.3s ease;
+}
+
+.profile-icon-circle:hover {
+  border-color: #f0f442;
+  transform: scale(1.05);
+}
+
+.profile-icon-circle img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.profile-arrow {
+  color: #e4e827;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.profile-floating-div {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 200px;
+  background: white;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 1050;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid rgba(228, 232, 39, 0.3);
+}
+
+.profile-menu-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.profile-menu-item:hover {
+  background: #f8f9fa;
+}
+
+.profile-menu-item i {
+  width: 16px;
+  color: #666;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .navbar-content {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .trip-btn-text {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 8px 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .navbar-pri {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .navbar-content {
+    justify-content: center;
+  }
+
+  .social-toggle {
+    margin-left: 0;
+  }
+
+  .search-friends-container.expanded {
+    max-width: 200px;
+  }
+
+  .hidden-filters {
+    left: -50px;
+    right: -50px;
+  }
+
+  .friend-requests-dropdown {
+    width: 260px;
+  }
 }
 </style>

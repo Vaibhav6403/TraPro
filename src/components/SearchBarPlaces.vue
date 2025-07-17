@@ -66,7 +66,7 @@ const onSearchInput = async () => {
 }
 
 const selectPlace = async (place) =>{
-    debugger
+    
     emit("placeSend",place);
 }
 

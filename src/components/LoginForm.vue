@@ -48,6 +48,10 @@
           <span class="btn-text">Login</span>
           <span class="btn-icon">→</span>
         </button>
+        <div class="signup-section">
+        <div class="signup-text">Don't have account</div>
+        <span @click="()=>router.push('/register')" class="signup-link">Sign Up</span>
+        </div>
       </form>
 
       <!-- Additional Links -->
@@ -78,7 +82,7 @@ const login = async ()=>{
         password:form.password
     }
     try{
-        let response = await axios.post('http://localhost:5002/api/user/login',request)
+        let response = await axios.post(`http://${import.meta.env.VITE_API_URL}/api/user/login`,request)
         if(response.status == 200){
             localStorage.setItem("token",response.data.token)
             localStorage.setItem("username",response.data.user.username)
@@ -312,6 +316,13 @@ const login = async ()=>{
   color: #2980b9;
   text-decoration: underline;
 }
+
+.signup-section {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid rgba(221, 221, 221, 0.5);
+            margin-top: 10px;
+        }
 
 .signup-text {
   margin: 1rem 0 0 0;

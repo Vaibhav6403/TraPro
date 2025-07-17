@@ -50,7 +50,7 @@ const router = useRouter();
       password:form.password
     }
     try{
-      const response = await axios.post('http://localhost:5002/api/user/register', request)
+      const response = await axios.post(`http://${import.meta.env.VITE_API_URL}/api/user/register`, request)
       console.log("response",response)
       router.push('/login')
     }

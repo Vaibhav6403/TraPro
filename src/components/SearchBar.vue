@@ -14,7 +14,7 @@
 
     <ul
       v-if="searchResults.length"
-      class="list-group position-absolute w-100 z-3 mt-1"
+      class="list-group position-absolute w-100  mt-1"
     >
       <li
         v-for="user in searchResults"
@@ -24,11 +24,12 @@
         <span>{{ user.username }}</span>
         <button
           v-if="isFriendCheck(user.username)"
-          class="btn btn-sm btn-primary"
+          class="accept-btn"
           @click="addFriend(user.username)"
         >
           Add Friend
         </button>
+        <i class="fa-solid fa-xmark remove-btn" v-else @click="removeFriend(user.username)"></i>
       </li>
     </ul>
   </div>
@@ -39,6 +40,7 @@ import axios from "axios";
 const searchQuery = ref("");
 const searchResults = ref([]);
 const searchWrapper = ref(null);
+const userId = ref('');
 const {userFriends} = defineProps({
   userFriends: []
 });
@@ -47,6 +49,7 @@ onMounted(()=>{
     // debugger
     console.log(userFriends);
     document.addEventListener('click', handleClickOutside);
+      userId.value = localStorage.getItem("username");
 })
 onUnmounted(()=>{
     document.removeEventListener('click', handleClickOutside);
@@ -67,7 +70,7 @@ const searchUsers = async () => {
       username: searchQuery.value,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/search-friends",
+      `http://${import.meta.env.VITE_API_URL}/api/user/search-friends`,
       request,
       {
         headers: {
@@ -93,11 +96,11 @@ const isFriendCheck = (username) => {
 const addFriend = async (friendUsername) => {
   try {
     let request = {
-      username: locationData.username,
+      username: userId.value,
       friendUsername: friendUsername,
     };
     let response = await axios.post(
-      "http://localhost:5002/api/user/add-friend",
+      `http://${import.meta.env.VITE_API_URL}/api/user/add-friend`,
       request,
       {
         headers: {
@@ -105,6 +108,29 @@ const addFriend = async (friendUsername) => {
         },
       }
     );
+    searchResults.value = []
+    console.log("user added", response);
+  } catch (error) {
+    console.error("the error in add friends is", error);
+  }
+};
+
+const removeFriend = async (friendUsername) => {
+  try {
+    let request = {
+      username: userId.value,
+      friendUsername: friendUsername,
+    };
+    let response = await axios.post(
+      `http://${import.meta.env.VITE_API_URL}/api/user/remove-friend`,
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    searchResults.value = []
     console.log("user added", response);
   } catch (error) {
     console.error("the error in add friends is", error);
@@ -218,5 +244,24 @@ label {
   z-index: 1050;
   border: 1px solid #ccc;
   top: 25px;
+}
+.accept-btn {
+  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
+  color: #1d1a1f;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.accept-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(228, 232, 39, 0.4);
+}
+.remove-btn{
+  cursor: pointer;
 }
 </style>

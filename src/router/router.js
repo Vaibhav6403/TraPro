@@ -3,6 +3,7 @@ import AuthView from '../components/AuthView.vue'
 import RegisterForm from '../components/RegisterForm.vue'
 import HelloWorld from "../components/HelloWorld.vue"
 import Map from "../components/Map.vue"
+import ShareTripComponent from '../components/ShareTripComponent.vue'
 
 
 const routes = [
@@ -21,6 +22,13 @@ const routes = [
         component: Map,
         meta: { requiresAuth: true }
     },
+    {
+        path:'/shared-trip/:token',
+        component:ShareTripComponent,
+        meta: {
+            requiresAuth: false // or omit this line entirely
+        }
+    }
 
 ]
 
