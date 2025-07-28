@@ -54,11 +54,19 @@ const resetPassword = async ()=>{
           },
         })
     if(response){
+        toast.success('successfull');
         router.push('/profile')
     }
     
   }
   catch(error){
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error('the error in reset password is',error)
   }
 }

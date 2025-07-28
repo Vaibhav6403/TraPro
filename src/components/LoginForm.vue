@@ -68,6 +68,7 @@
 <script setup>
 import { reactive } from "vue";
 import axios from "axios"
+import { toast } from 'vue3-toastify'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -87,10 +88,21 @@ const login = async ()=>{
             localStorage.setItem("token",response.data.token)
             localStorage.setItem("username",response.data.user.username)
             localStorage.setItem("userId",response.data.user.id)
+              toast.success('Login successful!', {
+        position: 'top-right',
+        autoClose: 3000,
+      })
             router.push('/dashboard')
         }
     }
     catch(error){
+       toast.error(
+      error.response?.data?.message || 'Login failed. Please check your credentials.',
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
         console.error(error);
     }
 }

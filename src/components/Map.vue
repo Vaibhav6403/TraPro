@@ -1281,6 +1281,7 @@ import SearchBar from "./SearchBar.vue";
 import MapComponent from "./MapComponent.vue";
 import SearchBarPlaces from "./SearchBarPlaces.vue";
 import StarComponent from "./StarComponent.vue";
+import { toast } from 'vue3-toastify'
 import PopOver from "./PopOver.vue";
 const modalInstance = ref(null);
 const map = ref(null);
@@ -1468,6 +1469,13 @@ const getMarkersUrl = async () => {
     markersUrl.value = response.data.markers;
     console.log(response);
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in getting markers url is", error);
   }
 };
@@ -1645,7 +1653,15 @@ const socialModeChange = debounce(async () => {
         popoverPosition,
         markersUrl
       );
-    } catch (error) {}
+    } catch (error) {
+      toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
+    }
   } else {
     getLocations();
   }
@@ -1704,7 +1720,15 @@ const createTrip = async () => {
         },
       }
     );
+    toast.success('successfull');
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in creating trip is", error);
   }
 };
@@ -1725,6 +1749,13 @@ const getTrips = async () => {
     console.log(response);
     trips.value = response.data;
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in creating trip is", error);
   }
 };
@@ -1888,10 +1919,18 @@ const addLocationsToTrip = async () => {
         },
       }
     );
+    toast.success('successfull');
     console.log(response);
     isSidebarCollapsed.value = true;
     isAddLocationToTrip.value = false;
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in creating trip is", error);
     isSidebarCollapsed.value = true;
     isAddLocationToTrip.value = false;
@@ -1923,6 +1962,13 @@ const shareTrip = async (trip) => {
     }
     console.log(response);
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in accept friend request is", error);
   }
   shareTripModalInstance?.show();
@@ -1946,12 +1992,20 @@ const acceptFriendRequest = async (friendUsername) => {
     );
     // debugger;
     if (response.status === 200) {
+      toast.success('successfull');
       friendRequests.value = friendRequests.value.filter(
         (username) => username !== friendUsername
       );
     }
     console.log(response);
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in accept friend request is", error);
   }
 };
@@ -1971,6 +2025,13 @@ const getFriendRequests = async () => {
     );
     friendRequests.value = response.data.friendRequestUsernames;
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in the getting friend request is", error);
   }
 };
@@ -2119,6 +2180,7 @@ const addLocation = async () => {
       }
     );
     if (response.status == 201) {
+      toast.success('successfull');
       console.log("response", response);
       modalInstance.value.hide();
     }
@@ -2132,6 +2194,13 @@ const addLocation = async () => {
       .addTo(map.value);
     map.value.flyTo({ center: response.data.location.coordinates, zoom: 14 });
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error(error);
   }
 };
@@ -2233,6 +2302,7 @@ const editLocation = async () => {
         },
       }
     );
+    toast.success('successfull');
     locations.value = [response.data];
 
     console.log(response);

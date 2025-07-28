@@ -323,6 +323,13 @@ const getUserData = async () => {
     profileData.friends = response.data.user.friends.length;
     profileData.avatar = response.data.user.image.url;
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in fetching data is", error);
   }
 };
@@ -341,11 +348,19 @@ const sendResetEmail = async () => {
         },
       }
     );
+    toast.success('successfull');
     profileData.username = response.data.user.username;
     profileData.firstName = response.data.user.firstname;
     profileData.lastName = response.data.user.lastname;
     profileData.email = response.data.user.email;
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in reset password is", error);
   }
 };
@@ -373,8 +388,16 @@ const toggleEdit = async() => {
         },
       }
     );
+    toast.success('successfull');
   }
   catch(error){
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in edit data is", error);
   }
 }
@@ -401,7 +424,15 @@ const handleAvatarUpload = async (event) => {
       }
     );
     profileData.avatar = response.data.user.image.url;
+    toast.success('successfull');
   } catch (error) {
+    toast.error(
+      error.response?.data?.message ,
+      {
+        position: 'top-right',
+        autoClose: 4000,
+      }
+    )
     console.error("the error in uploading image is", error);
   }
 };
