@@ -1244,6 +1244,16 @@
           </button>
         </div>
       </div>
+      <div v-if="tripLocations.length" class="exit-trip-button">
+        <button
+          @click="exitTripView"
+          class="btn exit-btn"
+          title="Exit Trip View"
+        >
+          <i class="fas fa-times"></i>
+          <span>Exit Trip</span>
+        </button>
+      </div>
     </div>
     <NumberComponent
       v-if="tripLocations.length"
@@ -1281,7 +1291,7 @@ import SearchBar from "./SearchBar.vue";
 import MapComponent from "./MapComponent.vue";
 import SearchBarPlaces from "./SearchBarPlaces.vue";
 import StarComponent from "./StarComponent.vue";
-import { toast } from 'vue3-toastify'
+import { toast } from "vue3-toastify";
 import PopOver from "./PopOver.vue";
 const modalInstance = ref(null);
 const map = ref(null);
@@ -1469,13 +1479,10 @@ const getMarkersUrl = async () => {
     markersUrl.value = response.data.markers;
     console.log(response);
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in getting markers url is", error);
   }
 };
@@ -1654,13 +1661,10 @@ const socialModeChange = debounce(async () => {
         markersUrl
       );
     } catch (error) {
-      toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
+      toast.error(error.response?.data?.message, {
+        position: "top-right",
         autoClose: 4000,
-      }
-    )
+      });
     }
   } else {
     getLocations();
@@ -1720,15 +1724,12 @@ const createTrip = async () => {
         },
       }
     );
-    toast.success('successfull');
+    toast.success("successfull");
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in creating trip is", error);
   }
 };
@@ -1749,13 +1750,10 @@ const getTrips = async () => {
     console.log(response);
     trips.value = response.data;
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in creating trip is", error);
   }
 };
@@ -1919,18 +1917,15 @@ const addLocationsToTrip = async () => {
         },
       }
     );
-    toast.success('successfull');
+    toast.success("successfull");
     console.log(response);
     isSidebarCollapsed.value = true;
     isAddLocationToTrip.value = false;
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in creating trip is", error);
     isSidebarCollapsed.value = true;
     isAddLocationToTrip.value = false;
@@ -1962,16 +1957,36 @@ const shareTrip = async (trip) => {
     }
     console.log(response);
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in accept friend request is", error);
   }
   shareTripModalInstance?.show();
+};
+const exitTripView = () => {
+  // Clear trip locations
+  tripLocations.value = [];
+  
+  // Reset selected index
+  selectedIndex.value = null;
+  
+  // Remove trip line from map
+  removeTripLine();
+  
+  // Clear existing markers
+  markers.forEach((marker) => marker.remove());
+  markers.length = 0;
+  
+  // Reload regular locations
+  getLocations();
+  
+  // Close sidebar if it's showing trip details
+  if (!isSidebarCollapsed.value && viewMoreInfo.value) {
+    isSidebarCollapsed.value = true;
+    viewMoreInfo.value = false;
+  }
 };
 
 // Friend Functions
@@ -1992,20 +2007,17 @@ const acceptFriendRequest = async (friendUsername) => {
     );
     // debugger;
     if (response.status === 200) {
-      toast.success('successfull');
+      toast.success("successfull");
       friendRequests.value = friendRequests.value.filter(
         (username) => username !== friendUsername
       );
     }
     console.log(response);
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in accept friend request is", error);
   }
 };
@@ -2025,13 +2037,10 @@ const getFriendRequests = async () => {
     );
     friendRequests.value = response.data.friendRequestUsernames;
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error("the error in the getting friend request is", error);
   }
 };
@@ -2162,7 +2171,7 @@ const addLocation = async () => {
     locationType: locationData.locationType,
     comments: locationData.comments,
     rating: selectedRating.value,
-    youtubeLinks:locationData.youtubeLinks,
+    youtubeLinks: locationData.youtubeLinks,
   };
   for (const key in request) {
     formData.append(key, request[key]);
@@ -2180,7 +2189,7 @@ const addLocation = async () => {
       }
     );
     if (response.status == 201) {
-      toast.success('successfull');
+      toast.success("successfull");
       console.log("response", response);
       modalInstance.value.hide();
     }
@@ -2194,13 +2203,10 @@ const addLocation = async () => {
       .addTo(map.value);
     map.value.flyTo({ center: response.data.location.coordinates, zoom: 14 });
   } catch (error) {
-    toast.error(
-      error.response?.data?.message ,
-      {
-        position: 'top-right',
-        autoClose: 4000,
-      }
-    )
+    toast.error(error.response?.data?.message, {
+      position: "top-right",
+      autoClose: 4000,
+    });
     console.error(error);
   }
 };
@@ -2230,7 +2236,7 @@ function getUserLocation() {
 const getLocations = async () => {
   try {
     let request = {
-      username: locationData.username,
+      username: localStorage.getItem("username"),
     };
     const response = await axios.post(
       `http://${import.meta.env.VITE_API_URL}/api/user/get-locations`,
@@ -2302,7 +2308,7 @@ const editLocation = async () => {
         },
       }
     );
-    toast.success('successfull');
+    toast.success("successfull");
     locations.value = [response.data];
 
     console.log(response);
@@ -2407,7 +2413,8 @@ const removeYouTubeLink = (index) => {
   top: calc(50% - 2.25rem);
   position: absolute;
   pointer-events: none;
-  transition: transform var(--transition-normal), opacity var(--transition-normal);
+  transition: transform var(--transition-normal),
+    opacity var(--transition-normal);
   opacity: 0;
   transform: scale(0);
   display: flex;
@@ -2451,7 +2458,8 @@ const removeYouTubeLink = (index) => {
 .social-clock__button.twitter {
   background-color: rgba(59, 130, 246, 0.3);
   border: 2px solid rgba(59, 130, 246, 0.7);
-  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+  transition: background-color var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
 .social-clock__button.twitter:hover {
@@ -2462,7 +2470,8 @@ const removeYouTubeLink = (index) => {
 .social-clock__button.github {
   background-color: rgba(0, 0, 0, 0.8);
   border: 2px solid rgba(0, 0, 0, 0.9);
-  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+  transition: background-color var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
 .social-clock__button.github:hover {
@@ -2503,7 +2512,11 @@ const removeYouTubeLink = (index) => {
   position: fixed;
   z-index: var(--z-fixed);
   width: 100%;
-  background: linear-gradient(135deg, var(--neutral-800) 0%, var(--neutral-700) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--neutral-800) 0%,
+    var(--neutral-700) 100%
+  );
   color: var(--neutral-white);
   padding: var(--spacing-md) var(--spacing-lg);
   display: flex;
@@ -2552,7 +2565,11 @@ const removeYouTubeLink = (index) => {
 }
 
 .nav-filter {
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--primary-400) 100%
+  );
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-2xl);
   color: var(--neutral-black);
@@ -2805,7 +2822,11 @@ const removeYouTubeLink = (index) => {
 
 .dropdown-header {
   padding: var(--spacing-md);
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--primary-400) 100%
+  );
   color: var(--neutral-800);
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
@@ -2834,7 +2855,11 @@ const removeYouTubeLink = (index) => {
 }
 
 .accept-btn {
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--primary-400) 100%
+  );
   color: var(--neutral-800);
   border: none;
   padding: var(--spacing-xs) var(--spacing-md);
@@ -2855,7 +2880,11 @@ const removeYouTubeLink = (index) => {
 }
 
 .trip-btn {
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--primary-400) 100%
+  );
   color: var(--neutral-800);
   border: none;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -3048,7 +3077,11 @@ const removeYouTubeLink = (index) => {
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-md) var(--spacing-lg);
-  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--primary-700) 100%
+  );
   color: var(--neutral-white);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -3152,7 +3185,11 @@ const removeYouTubeLink = (index) => {
 }
 
 .own-message .message-bubble {
-  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-600) 0%,
+    var(--primary-700) 100%
+  );
   color: var(--neutral-white);
   border-color: transparent;
 }
@@ -3235,7 +3272,8 @@ const removeYouTubeLink = (index) => {
   align-items: center !important;
   gap: var(--spacing-sm) !important;
   border-radius: var(--radius-2xl) !important;
-  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-md) !important;
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs)
+    var(--spacing-md) !important;
   border: 1px solid var(--neutral-200) !important;
   transition: all var(--transition-fast) !important;
 }
@@ -3266,7 +3304,11 @@ const removeYouTubeLink = (index) => {
 .send-btn {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--primary-600) 100%
+  );
   border: none;
   border-radius: var(--radius-full);
   color: var(--neutral-black);
@@ -3438,6 +3480,40 @@ const removeYouTubeLink = (index) => {
   width: 90% !important;
   flex-wrap: nowrap !important;
 }
+.exit-trip-button {
+  position: fixed;
+  top: 120px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.exit-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  font-size: 14px;
+}
+
+.exit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.exit-btn i {
+  font-size: 16px;
+}
+
 
 /* Animations */
 @keyframes pulse {
