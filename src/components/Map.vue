@@ -168,7 +168,7 @@
 
               <!-- Profile dropdown -->
               <div v-if="isProfileOpen" class="profile-floating-div">
-                <div class="profile-menu-item">
+                <div class="profile-menu-item" @click="goToProfile">
                   <i class="fa-solid fa-user"></i>
                   <span>Edit Profile</span>
                 </div>
@@ -239,9 +239,7 @@
             <div class="location-info">
               <!-- Location Name -->
               <div class="form-group mb-3">
-                <div >
-                  Location Name
-                </div>
+                <div>Location Name</div>
                 <div v-if="!isEditing">{{ selectedLocation.name || "—" }}</div>
                 <input
                   v-else
@@ -255,7 +253,7 @@
 
               <!-- Experience Type -->
               <div class="form-group mb-3">
-                <div >Experience Type</div>
+                <div>Experience Type</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.experienceType || "—" }}
                 </div>
@@ -277,7 +275,7 @@
 
               <!-- Preference -->
               <div class="form-group mb-3">
-                <div >Preference</div>
+                <div>Preference</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.preference || "—" }}
                 </div>
@@ -298,7 +296,7 @@
 
               <!-- Mood -->
               <div class="form-group mb-3">
-                <div >Mood</div>
+                <div>Mood</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.moodBased || "—" }}
                 </div>
@@ -319,7 +317,7 @@
 
               <!-- Time of Day -->
               <div class="form-group mb-3">
-                <div >Best Time to Visit</div>
+                <div>Best Time to Visit</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.timeOfDay || "—" }}
                 </div>
@@ -340,7 +338,7 @@
 
               <!-- Transport -->
               <div class="form-group mb-3">
-                <div >Mode of Transport</div>
+                <div>Mode of Transport</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.modeOfTransport || "—" }}
                 </div>
@@ -361,7 +359,7 @@
 
               <!-- Recommendation -->
               <div class="form-group mb-3">
-                <div >Recommendation</div>
+                <div>Recommendation</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.recommendation || "—" }}
                 </div>
@@ -382,9 +380,7 @@
 
               <!-- Price -->
               <div class="form-group mb-3">
-                <div class="info-label">
-                  Price Range
-                </div>
+                <div class="info-label">Price Range</div>
                 <div v-if="!isEditing">{{ selectedLocation.price || "—" }}</div>
                 <input
                   v-else
@@ -396,18 +392,16 @@
               </div>
 
               <div class="mt-2 mb-2">
-                    <StarComponent
-                      :maxStars="5"
-                      @update:rating="selectedRating = $event"
-                      :rating = "selectedLocation.rating"
-                    />
-                  </div>
+                <StarComponent
+                  :maxStars="5"
+                  @update:rating="selectedRating = $event"
+                  :rating="selectedLocation.rating"
+                />
+              </div>
 
               <!-- Comments -->
               <div class="form-group mb-3">
-                <div >
-                  Comments
-                </div>
+                <div>Comments</div>
                 <div v-if="!isEditing">
                   {{ selectedLocation.comments || "—" }}
                 </div>
@@ -419,14 +413,62 @@
                   placeholder="Comments"
                 />
               </div>
+
+              <!-- youtube video -->
+              <div
+                class="form-group mb-3"
+                v-if="
+                  selectedLocation.youtubeLinks &&
+                  selectedLocation.youtubeLinks.length > 0
+                "
+              >
+                <div class="info-label">
+                  <i class="fab fa-youtube me-2 text-danger"></i>Related Videos
+                </div>
+
+                <div v-if="!isEditing" class="youtube-gallery">
+                  <div
+                    v-for="(link, index) in selectedLocation.youtubeLinks"
+                    :key="index"
+                    class="youtube-gallery-item"
+                    @click="openYouTubeVideo(link)"
+                  >
+                    <div class="youtube-thumbnail-small">
+                      <img
+                        :src="getYouTubeThumbnail(link)"
+                        :alt="`Video ${index + 1}`"
+                      />
+                      <div class="play-overlay-small">
+                        <i class="fas fa-play"></i>
+                      </div>
+                    </div>
+                    <span class="video-label">Video {{ index + 1 }}</span>
+                  </div>
+
+                  <!-- View all videos button if more than 3 -->
+                  <button
+                    v-if="selectedLocation.youtubeLinks.length > 3"
+                    class="btn btn-sm btn-outline-primary mt-2 w-100"
+                    @click="showAllVideos = !showAllVideos"
+                  >
+                    <i class="fas fa-video me-2"></i>
+                    {{
+                      showAllVideos
+                        ? "Show Less"
+                        : `View All ${selectedLocation.youtubeLinks.length} Videos`
+                    }}
+                  </button>
+                </div>
+
+                <!-- Edit mode remains similar but with better styling -->
+                <div v-else class="youtube-edit-mode">
+                  <!-- Your existing edit mode code but with improved styling -->
+                </div>
+              </div>
             </div>
 
             <!-- Save Button -->
-            <button
-              v-if="isEditing"
-              class="accept-btn"
-              @click="editLocation"
-            >
+            <button v-if="isEditing" class="accept-btn" @click="editLocation">
               <i class="fas fa-save me-2"></i>Save Changes
             </button>
           </div>
@@ -515,29 +557,14 @@
         </div>
       </div>
       <div class="main-content-container">
-        <div
-          v-if="selectedLocation"
-          class="custom-popover"
-          :style="{
-            top: popoverPosition.y + 'px',
-            left: popoverPosition.x + 'px',
-          }"
-        >
-          <h3>{{ selectedLocation.value }}</h3>
-          <img
-            :src="selectedLocation.image.url"
-            alt="Location Image"
-            class="card-img"
-            v-if="selectedLocation?.image"
-          />
-          <p class="mt-2">Time to Visit: {{ selectedLocation.timeOfDay }}</p>
-          <p>Expense: {{ selectedLocation.price }}</p>
-          <button @click="closeLocationInfo">Close</button>
-          <button @click="viewLocationInfo">View More</button>
-          <button @click="addLocationToTrip">
-            <i class="fa-solid fa-location-dot"></i>
-          </button>
-        </div>
+        <PopOver
+          :selectedLocation="selectedLocation"
+          :windowSize="windowSize"
+          :popoverPosition="popoverPosition"
+          @toggle-info-display="viewLocationInfo"
+          @close-info-display="closeLocationInfo"
+          @add-location-trip="addLocationToTrip"
+        />
         <div v-if="selectedTrip" class="chat-container">
           <!-- Chat Header -->
           <div class="chat-header">
@@ -883,7 +910,6 @@
                     <StarComponent
                       :maxStars="5"
                       @update:rating="selectedRating = $event"
-                      
                     />
                   </div>
 
@@ -921,6 +947,78 @@
                         <i class="fas fa-cloud-upload-alt me-2"></i>
                         Choose Image or Drag & Drop
                       </label>
+                    </div>
+                  </div>
+
+                  <!-- Youtube Link -->
+                  <div class="form-group mb-3">
+                    <label class="form-label">
+                      <i class="fab fa-youtube me-2 text-danger"></i>Related
+                      Videos
+                    </label>
+
+                    <!-- Single input with add button for new links -->
+                    <div class="youtube-input-section mb-3 mt-5">
+                      <div class="input-group-youtube input-group">
+                        <span class="input-group-text">
+                          <i class="fab fa-youtube text-danger"></i>
+                        </span>
+                        <input
+                          type="url"
+                          v-model="newYouTubeLink"
+                          class="form-control"
+                          placeholder="Paste YouTube URL here..."
+                          @keyup.enter="addYouTubeLink"
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          @click="addYouTubeLink"
+                          :disabled="!isValidYouTubeUrl(newYouTubeLink)"
+                        >
+                          <i class="fas fa-plus"></i>
+                        </button>
+                      </div>
+                      <small class="form-text text-muted mt-1">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Add YouTube videos that showcase this location
+                      </small>
+                    </div>
+
+                    <!-- Display added links with thumbnails -->
+                    <div
+                      v-if="locationData.youtubeLinks.length > 0"
+                      class="youtube-preview-grid"
+                    >
+                      <div
+                        v-for="(link, index) in locationData.youtubeLinks"
+                        :key="index"
+                        class="youtube-preview-card"
+                      >
+                        <div class="youtube-thumbnail">
+                          <img
+                            :src="getYouTubeThumbnail(link)"
+                            :alt="`Video ${index + 1}`"
+                            class="thumbnail-img"
+                          />
+                          <div class="play-overlay">
+                            <i class="fas fa-play"></i>
+                          </div>
+                        </div>
+                        <div class="youtube-info">
+                          <small class="youtube-title"
+                            >Video {{ index + 1 }}</small
+                          >
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger remove-btn"
+                            @click="removeYouTubeLink(index)"
+                            title="Remove video"
+                          >
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </form>
@@ -1014,6 +1112,21 @@
                     </div>
                   </div>
 
+                  <div class="social-toggle">
+                    <div
+                      class="form-check form-switch d-flex align-items-center"
+                    >
+                      <input
+                        class="form-check-input me-2"
+                        type="checkbox"
+                        role="switch"
+                        id="flexSwitchCheckDefault"
+                        v-model="privateTrip"
+                      />
+                      <label for="flexSwitchCheckDefault"> Private Trip </label>
+                    </div>
+                  </div>
+
                   <!-- Group Image -->
                   <div class="form-group mb-4">
                     <!-- <label class="form-label">
@@ -1083,7 +1196,7 @@
                 ></button>
               </div>
               <div class="modal-body">
-                <input :value="shareUrl" readonly  style="width: 100%;"/> 
+                <input :value="shareUrl" readonly style="width: 100%" />
               </div>
 
               <div class="modal-footer">
@@ -1143,7 +1256,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, reactive, onUnmounted, computed } from "vue";
+import { onMounted, ref, reactive, onUnmounted, computed, nextTick } from "vue";
 import maplibregl, { FormatExpression } from "maplibre-gl";
 import markerImage from "../assets/mapmarker.png";
 import crossmapmarker from "../assets/crossmapmarker.png";
@@ -1153,6 +1266,7 @@ import { Modal } from "bootstrap";
 import axios from "axios";
 import { useRouter } from "vue-router";
 import NumberComponent from "./NumberComponent.vue";
+import { createMarkers } from "../repos/MainFunctions";
 import {
   socket,
   connectSocket,
@@ -1167,12 +1281,14 @@ import SearchBar from "./SearchBar.vue";
 import MapComponent from "./MapComponent.vue";
 import SearchBarPlaces from "./SearchBarPlaces.vue";
 import StarComponent from "./StarComponent.vue";
+import PopOver from "./PopOver.vue";
 const modalInstance = ref(null);
 const map = ref(null);
 const isMenuOpen = ref(false);
 const locations = ref([]);
 const pointerMode = ref("current");
 const socialmode = ref(false);
+const privateTrip = ref(false);
 const userFriends = ref([]);
 const friendRequests = ref([]);
 const router = useRouter();
@@ -1233,6 +1349,7 @@ const locationData = reactive({
   selectedFile: null,
   comments: "",
   rating: "",
+  youtubeLinks: [],
 });
 const markers = reactive([]);
 const isShowTripModal = ref(false);
@@ -1293,12 +1410,17 @@ const visibleFilters = computed(() => filters.slice(0, 3));
 const hiddenFilters = computed(() => filters.slice(3));
 const showNotificationDropdown = ref(true);
 const selectedRating = ref(0);
-const shareUrl = ref('');
+const shareUrl = ref("");
+const windowSize = ref({ width: 0, height: 0 });
+const markersUrl = ref([]);
+const newYouTubeLink = ref("");
+
 onMounted(() => {
   getUserLocation();
   let userId = localStorage.getItem("username");
   userInfo.token = localStorage.getItem("token");
   locationData.username = userId;
+  getMarkersUrl();
   getLocations();
   getUserFriends();
   getFriendRequests();
@@ -1310,19 +1432,75 @@ onMounted(() => {
     });
   }, 500);
   registerMessageHandler();
+  updateWindowSize();
+  window.addEventListener("resize", updateWindowSize);
   document.addEventListener("click", handleClickOutside);
 });
+const updateWindowSize = () => {
+  windowSize.value = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+};
 
 onUnmounted(() => {
   clearInterval(intervalId);
   clearInterval(intervalIdFriends);
+  window.removeEventListener("resize", updateWindowSize);
   document.removeEventListener("click", handleClickOutside);
 });
 
 // General Functions
-const copyLink = ()=>{
+const getMarkersUrl = async () => {
+  try {
+    const request = {
+      username: locationData.username,
+    };
+    let response = await axios.post(
+      `http://${import.meta.env.VITE_API_URL}/api/user/get-markers`,
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    markersUrl.value = response.data.markers;
+    console.log(response);
+  } catch (error) {
+    console.error("the error in getting markers url is", error);
+  }
+};
+const goToProfile = () => {
+  router.push("/profile");
+};
+const createMarkersWithPositioning = (
+  locations,
+  markers,
+  map,
+  selectedLocation,
+  popoverPosition,
+  markersUrl
+) => {
+  // Call your existing createMarkers function
+  debugger;
+  createMarkers(
+    locations,
+    markers,
+    map,
+    selectedLocation,
+    popoverPosition,
+    markersUrl
+  );
+
+  // Add smart positioning logic
+  nextTick(() => {
+    updateWindowSize();
+  });
+};
+const copyLink = () => {
   navigator.clipboard.writeText(shareUrl.value);
-}
+};
 const closeProfile = () => {
   isProfileOpen.value = false;
 };
@@ -1342,6 +1520,7 @@ const updateMapOnChange = () => {
 const toggleSidebar = () => {
   if (!isSidebarCollapsed.value && viewMoreInfo.value)
     viewMoreInfo.value = !viewMoreInfo.value;
+  isAddLocationToTrip.value = false;
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
   if (tripLocations.value != "") {
     tripLocations.value = "";
@@ -1458,7 +1637,14 @@ const socialModeChange = debounce(async () => {
           },
         }
       );
-      createMarkers(response?.data?.locations);
+      createMarkersWithPositioning(
+        response?.data?.locations,
+        markers,
+        map,
+        selectedLocation,
+        popoverPosition,
+        markersUrl
+      );
     } catch (error) {}
   } else {
     getLocations();
@@ -1498,6 +1684,7 @@ const createTrip = async () => {
     const formData = new FormData();
     formData.append("createdBy", locationData.username);
     formData.append("name", tripData.name);
+    formData.append("privateTrip", privateTrip.value);
     tripData.members.forEach((member) => {
       formData.append("members", member);
     });
@@ -1559,7 +1746,14 @@ const getTrip = async (tripId) => {
     tripLocations.value = response.data.trip.locations;
     markers.forEach((marker) => marker.remove());
     markers.length = 0;
-    createMarkers(response.data.trip.locations);
+    createMarkersWithPositioning(
+      response.data.trip.locations,
+      markers,
+      map,
+      selectedLocation,
+      popoverPosition,
+      markersUrl
+    );
     drawTripLine(response.data.trip.locations);
   } catch (error) {
     console.error("the error in creating trip is", error);
@@ -1705,16 +1899,17 @@ const addLocationsToTrip = async () => {
   }
 };
 const shareTrip = async (trip) => {
-  debugger
+  debugger;
   const modalEl = document.getElementById("shareTripModal");
   const shareTripModalInstance = new Modal(modalEl);
   let request = {
-    username:locationData.username,
-    tripId:trip._id
-  }
-    try {
+    username: locationData.username,
+    tripId: trip._id,
+  };
+  try {
     let response = await axios.post(
-      `http://${import.meta.env.VITE_API_URL}/api/user/share`,request,
+      `http://${import.meta.env.VITE_API_URL}/api/user/share`,
+      request,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -1723,8 +1918,8 @@ const shareTrip = async (trip) => {
     );
     debugger;
     if (response.status === 200) {
-      const data =  response.data;
-    shareUrl.value = data.shareUrl;
+      const data = response.data;
+      shareUrl.value = data.shareUrl;
     }
     console.log(response);
   } catch (error) {
@@ -1906,6 +2101,7 @@ const addLocation = async () => {
     locationType: locationData.locationType,
     comments: locationData.comments,
     rating: selectedRating.value,
+    youtubeLinks:locationData.youtubeLinks,
   };
   for (const key in request) {
     formData.append(key, request[key]);
@@ -1977,50 +2173,19 @@ const getLocations = async () => {
       }
     );
     locations.value = response.data.locations;
-    createMarkers(locations.value);
+    createMarkersWithPositioning(
+      locations.value,
+      markers,
+      map,
+      selectedLocation,
+      popoverPosition,
+      markersUrl
+    );
 
     console.log(response);
   } catch (error) {
     console.error("the error occured is", error);
   }
-};
-const createMarkers = (locations) => {
-  // debugger;
-  markers.forEach((marker) => marker.remove());
-  markers.length = 0;
-  locations.forEach((location) => {
-    let locationCor = location.location.coordinates;
-    const markerEl = document.createElement("img");
-    switch (location.recommendation) {
-      case "Recommended":
-        markerEl.src = mapMarkerStar;
-        break;
-      case "Visited":
-        markerEl.src = locationPin;
-        break;
-      case "Not to visit":
-        markerEl.src = crossmapmarker;
-        break;
-      default:
-        markerEl.src = markerImage;
-    }
-    markerEl.style.width = "30px";
-    markerEl.style.height = "30px";
-    markerEl.dataset.id = location._id;
-    let marker = new maplibregl.Marker({ element: markerEl })
-      .setLngLat(locationCor)
-      .addTo(map.value);
-    marker.location = location;
-    markerEl.addEventListener("click", () => {
-      selectedLocation.value = location;
-
-      const [lng, lat] = location.location.coordinates;
-      const point = map.value.project([lng, lat]);
-
-      popoverPosition.value = { x: point.x, y: point.y };
-    });
-    markers.push(marker);
-  });
 };
 const viewLocationInfo = () => {
   isSidebarCollapsed.value = false;
@@ -2090,34 +2255,65 @@ const setLocationFromSearch = async (place) => {
     curve: 1.4,
   });
 };
+const extractYouTubeVideoId = (url) => {
+  const regex =
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+};
+const getYouTubeThumbnail = (url) => {
+  const videoId = extractYouTubeVideoId(url);
+  return videoId
+    ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+    : "/placeholder-video.jpg";
+};
+const openYouTubeVideo = (url) => {
+  window.open(url, "_blank", "noopener,noreferrer");
+};
+const showToast = (message, type = "info") => {
+  console.log(`${type.toUpperCase()}: ${message}`);
+};
+const isValidYouTubeUrl = (url) => {
+  const regex = /^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/;
+  return regex.test(url);
+};
+const addYouTubeLink = async () => {
+  if (isValidYouTubeUrl(newYouTubeLink.value)) {
+    locationData.youtubeLinks.push(newYouTubeLink.value.trim());
+    newYouTubeLink.value = "";
+    showToast("YouTube video added successfully!", "success");
+  } else {
+    showToast("Invalid YouTube link.", "error");
+  }
+};
+const removeYouTubeLink = (index) => {
+  locationData.youtubeLinks.splice(index, 1);
+};
 </script>
 
 
 
 <style scoped>
-#map {
-  width: 100;
-  height: 100vh;
-  border: 1px solid #ccc;
-  position: relative;
-}
+/* =============================================
+   MAP COMPONENT SCOPED STYLES
+   ============================================= */
 
-.add-button {
-  background-color: #007bff;
-  color: white;
-  font-size: 2rem;
-  border-radius: 50%;
-  padding: 10px;
-  border: none;
-  z-index: 20;
-  cursor: pointer;
+/* Map Container */
+#map {
+  width: 100%;
+  height: 100vh;
+  border: 1px solid var(--neutral-300);
+  position: relative;
 }
 
 .maplibregl-control-container {
   display: none;
 }
 
-/* Social Clock Styles */
+/* =============================================
+   SOCIAL CLOCK COMPONENT
+   ============================================= */
+
 .social-clock {
   position: absolute !important;
   top: 90%;
@@ -2130,19 +2326,18 @@ const setLocationFromSearch = async (place) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.5s ease;
-  z-index: 15;
+  transition: all var(--transition-slow);
+  z-index: var(--z-fixed);
 }
 
-/* List of buttons */
 .social-clock__list {
-  height: 4.5rem; /* 4rem button + 0.5rem padding */
+  height: 4.5rem;
   width: 4.5rem;
-  left: calc(50% - 2.25rem); /* center horizontally */
-  top: calc(50% - 2.25rem); /* center vertically */
+  left: calc(50% - 2.25rem);
+  top: calc(50% - 2.25rem);
   position: absolute;
   pointer-events: none;
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
   opacity: 0;
   transform: scale(0);
   display: flex;
@@ -2150,14 +2345,12 @@ const setLocationFromSearch = async (place) => {
   align-items: center;
 }
 
-/* When menu open, show buttons */
 .social-clock__list.open {
   pointer-events: all;
   opacity: 1;
   transform: scale(1);
 }
 
-/* Individual buttons */
 .social-clock__button {
   background: none;
   border: none;
@@ -2166,12 +2359,12 @@ const setLocationFromSearch = async (place) => {
   cursor: pointer;
   height: 4rem;
   width: 4rem;
-  left: calc(50% - 2rem); /* center horizontally */
-  top: calc(50% - 4rem / 2); /* center vertically */
+  left: calc(50% - 2rem);
+  top: calc(50% - 2rem);
   position: absolute;
   transform-origin: 50% 50%;
   pointer-events: all;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-normal);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2184,38 +2377,36 @@ const setLocationFromSearch = async (place) => {
 .social-clock__button:nth-child(2) {
   transform: rotate(-45deg) translate(5.5rem) rotate(45deg);
 }
-/* Button colors */
+
 .social-clock__button.twitter {
-  background-color: rgba(29, 161, 242, 0.3);
-  border: 2px solid rgba(29, 161, 242, 0.7);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background-color: rgba(59, 130, 246, 0.3);
+  border: 2px solid rgba(59, 130, 246, 0.7);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
 .social-clock__button.twitter:hover {
-  background-color: rgba(29, 161, 242, 1);
-  border-color: rgba(29, 161, 242, 1);
+  background-color: var(--accent-info);
+  border-color: var(--accent-info);
 }
 
 .social-clock__button.github {
   background-color: rgba(0, 0, 0, 0.8);
   border: 2px solid rgba(0, 0, 0, 0.9);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
 .social-clock__button.github:hover {
-  background-color: rgba(0, 0, 0, 1);
-  border-color: rgba(0, 0, 0, 1);
+  background-color: var(--neutral-black);
+  border-color: var(--neutral-black);
 }
 
-/* Icons inside buttons */
 .social-clock__button i {
-  color: #fff;
-  font-size: 1.8rem;
+  color: var(--neutral-white);
+  font-size: var(--font-size-lg);
 }
 
-/* Trigger button */
 .social-clock__trigger {
-  background: #000;
+  background: var(--neutral-black);
   border: none;
   border-radius: 4rem;
   height: 4rem;
@@ -2228,800 +2419,39 @@ const setLocationFromSearch = async (place) => {
   cursor: pointer;
 }
 
-.social-clock__trigger svg {
-  fill: #fff;
-  height: 60%;
-  width: 60%;
-}
-.form-group {
-  position: relative;
-  margin-bottom: 20px;
-}
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-}
-.form-group label {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  font-size: 14px;
-  color: #777;
-  transition: top 0.3s ease, font-size 0.3s ease, color 0.3s ease;
-}
-.select-label {
-  position: relative !important;
-  left: 0px !important;
-  top: 0px !important;
-  margin-right: 5px;
-}
-.form-group input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-.form-group input:focus + label,
-.form-group input:not(:placeholder-shown) + label {
-  top: -6px;
-  font-size: 12px;
-  color: #007bff;
-  background-color: #ffffff;
-  padding: 0 4px;
-  border-radius: 4px;
-  left: 8px;
-}
-.navbar {
-  position: fixed;
-  z-index: 500;
-  width: 100%;
-  background-color: #1d1a1f;
-  color: white;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.navbar-pri {
-  margin: 5px 0px;
-}
-.navbar-pri ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 0;
-}
-.custom-popover {
-  position: absolute;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  padding: 16px;
-  width: 250px;
-  z-index: 1000;
-  font-family: "Segoe UI", sans-serif;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.custom-popover h3 {
-  margin-top: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.custom-popover .card-img {
-  width: 100%;
-  height: auto;
-  margin-top: 8px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-
-.custom-popover p {
-  margin: 8px 0;
-  font-size: 14px;
-  color: #555;
-}
-
-.custom-popover button {
-  margin-top: 10px;
-  margin-right: 8px;
-  padding: 6px 12px;
-  font-size: 13px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: #2e86de;
-  color: white;
-  transition: background-color 0.3s;
-}
-
-.custom-popover button:hover {
-  background-color: #1b4f72;
-}
-.user-search {
-  position: relative;
-}
-
-.notification-bell {
-  position: relative;
-  display: inline-block;
-  font-size: 24px;
-  color: #e4e827;
-}
-
-.notification-dot {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 10px;
-  height: 10px;
-  background-color: red;
-  border-radius: 50%;
-  border: 2px solid white;
-}
-.applied-filter-dot {
-  position: absolute;
-  top: -10px;
-  right: -5px;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  background-color: #1d1a1f;
-  border-radius: 50%;
-  border: 1px solid #e4e827;
-  color: #e4e827;
-}
-.main-content-container {
-  width: 100%;
-  height: 100vh;
-  flex: 1;
-}
-.sidebar {
-  position: relative;
-  width: 20vw;
-  transition: width 0.3s ease;
-}
-.arrow-div {
-  position: absolute;
-  top: 200px;
-  right: -20px;
-  z-index: 200;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: center;
-  background-color: #e4e827;
-  align-items: center;
-  cursor: pointer;
-  border: 2px solid black;
-}
-.collapsed {
-  width: 2vw !important;
-}
-.trip-div {
-  width: 100%;
-  max-height: 100vh;
-  overflow-y: auto;
-  background-color: #f0f2f5;
-  border-right: 1px solid #d1d7db;
-  padding: 0;
-  font-family: "Segoe UI", sans-serif;
-  margin-top: 7vh;
-}
-
-.trip-div ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.trip-div li {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e0e0e0;
-  cursor: pointer;
-  background-color: #ffffff;
-  transition: background-color 0.2s ease;
-}
-
-.trip-div li:hover {
-  background-color: #ebebeb;
-}
-
-.trip-div li:active {
-  background-color: #d9d9d9;
-}
-/* .chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-left: 1px solid #dee2e6;
-  margin-top: 30px;
-}
-
-.chat-box {
-  flex: 1;
-  overflow-y: auto;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 1rem;
-  background-color: white;
-  margin-bottom: 1rem;
-  max-height: 500px; 
-}
-
-.chat-message {
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  background-color: #e9ecef;
-  word-wrap: break-word;
-}
-
-.chat-message strong {
-  color: #343a40;
-  margin-right: 0.5rem;
-}
-
-.chat-container input {
-  border: 1px solid #ced4da;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  outline: none;
-  width: 100%;
-} */
-.nav-filter {
-  background-color: #e4e827;
-  padding: 2px 13px;
-  border-radius: 15px;
-  color: #1d1a1f;
-  cursor: pointer;
-  position: relative;
-}
-.navbar-profile {
-  display: flex;
-  align-items: center;
-}
-.profile-icon {
-  position: relative;
-  cursor: pointer;
-}
-.profile-floating-div {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  width: 220px;
-  background-color: #fff;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1050;
-  overflow-y: auto;
-  max-height: 300px;
-  padding: 10px 0;
-  font-size: 14px;
-}
-
-.profile-floating-div > div {
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.profile-floating-div > div:hover {
-  background-color: #f5f5f5;
-}
-.profile-icon-circle {
-  height: 35px;
-  width: 35px;
-  border-radius: 50%;
-  overflow: hidden;
-}
-.profile-icon-circle img {
-  height: 100%;
-  width: 100%;
-}
-.form-switch .form-check-input {
-  width: 30px;
-  height: 20px;
-  background-color: #e4e827;
-  border: 2px solid #1d1a1f;
-  border-radius: 30px;
-  transition: all 0.3s ease-in-out;
-  position: relative;
-  cursor: pointer;
-}
-
-/* Toggle Thumb */
-.form-switch .form-check-input::before {
-  content: "";
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  height: 15px;
-  width: 15px;
-  background-color: #1d1a1f;
-  border-radius: 50%;
-  transition: all 0.3s ease-in-out;
-}
-
-/* When switch is checked */
-.form-switch .form-check-input:checked {
-  background-color: #1d1a1f;
-  border-color: #e4e827;
-}
-
-/* Move thumb when checked */
-.form-switch .form-check-input:checked::before {
-  transform: translateX(10px);
-  background-color: #e4e827;
-}
-
-/* Optional: Label Styling */
-.form-check-label {
-  margin-left: 0px;
-  font-weight: 600;
-  color: #f8f9fa;
-}
-.nav-filter {
-  font-size: 14px;
-  font-weight: 500;
-}
-.trip-btn {
-  background-color: none;
-  color: #f8f9fa;
-  font-size: 20px;
-}
-.sidebar {
-}
-.card-img {
-  height: 100px;
-  width: 100%;
-}
-.trip-profile img {
-  height: 35px;
-  width: 35px;
-  border-radius: 50%;
-}
-.location-detail {
-  padding: 20px;
-  font-family: "Segoe UI", sans-serif;
-  overflow-y: auto;
-}
-
-.detail-header h4 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.edit-btn,
-.save-btn {
-  background-color: #2e86de;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.edit-btn:hover,
-.save-btn:hover {
-  background-color: #1b4f72;
-}
-
-.location-image {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin-top: 10px;
-}
-.location-detail {
-  overflow-y: auto;
-  max-height: 90vh;
-}
-.location-info .info-group {
-  margin: 10px 0;
-}
-
-.location-info input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.active-icon {
-  color: #e4e827;
-}
-.sidebar-buttons {
-  padding: 7px;
-  border: 2px solid #1d1a1f;
-  border-radius: 15px;
-  background-color: #e4e827;
-}
-.chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  padding-top: 4rem;
-}
-
-/* Chat Header */
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.chat-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.trip-icon {
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.chat-name {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.chat-subtitle {
-  font-size: 12px;
-  opacity: 0.8;
-  font-weight: 400;
-}
-
-.close-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 50%;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-/* Chat Messages */
-.chat-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.message-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  animation: fadeInUp 0.3s ease-out;
-}
-
-.message-wrapper.own-message {
-  justify-content: flex-end;
-}
-
-.message-bubble {
-  max-width: 75%;
-  background: white;
-  border-radius: 18px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
-  position: relative;
-}
-
-.own-message .message-bubble {
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.8) 0%,
-    rgba(118, 75, 162, 0.8) 100%
-  );
-  color: white;
-  border-color: transparent;
-}
-
-.message-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  gap: 8px;
-}
-
-.sender-name {
-  font-weight: 600;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.own-message .sender-name {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.message-time {
-  font-size: 11px;
-  color: #9ca3af;
-  white-space: nowrap;
-}
-
-.own-message .message-time {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.message-content {
-  font-size: 14px;
-  line-height: 1.4;
-  color: #374151;
-  word-wrap: break-word;
-}
-
-.own-message .message-content {
-  color: white;
-}
-
-/* Empty State */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  text-align: center;
-  color: #6b7280;
-}
-
-.empty-icon {
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0 0 4px 0;
-  color: #374151;
-}
-
-.empty-subtext {
-  font-size: 14px;
-  margin: 0;
-  color: #9ca3af;
-}
-
-/* Chat Input */
-.chat-input-container {
-  padding: 16px 20px;
-  background: white;
-  border-top: 1px solid #e5e7eb;
-}
-
-.input-wrapper {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-
-  border-radius: 24px !important;
-  padding: 4px 4px 4px 16px !important;
-  border: 1px solid #e5e7eb !important;
-  transition: all 0.2s ease !important;
-}
-.input-wrapper input {
-  border: none;
-}
-
-.input-wrapper:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.chat-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 14px;
-  padding: 12px 0;
-  color: #374151;
-}
-
-.chat-input::placeholder {
-  color: #9ca3af;
-}
-
-.send-btn {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 50%;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.send-btn:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Typing Indicator */
-.typing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.typing-dots {
-  display: flex;
-  gap: 2px;
-}
-
-.typing-dots span {
-  width: 4px;
-  height: 4px;
-  background: #9ca3af;
-  border-radius: 50%;
-  animation: typing 1.4s infinite;
-}
-
-.typing-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes typing {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-  30% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .chat-container {
-    max-height: 100vh;
-    border-radius: 0;
-  }
-
-  .message-bubble {
-    max-width: 85%;
-  }
-
-  .chat-header {
-    padding: 12px 16px;
-  }
-
-  .chat-messages {
-    padding: 16px;
-  }
-
-  .chat-input-container {
-    padding: 12px 16px;
-  }
-}
+.social-clock__trigger i {
+  color: var(--neutral-white);
+  font-size: var(--font-size-xl);
+  padding: var(--spacing-sm);
+}
+
+/* =============================================
+   NAVBAR STYLES
+   ============================================= */
 
 .navbar {
   position: fixed;
-  z-index: 500;
+  z-index: var(--z-fixed);
   width: 100%;
-  background: linear-gradient(135deg, #1d1a1f 0%, #2a2530 100%);
-  color: white;
-  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--neutral-800) 0%, var(--neutral-700) 100%);
+  color: var(--neutral-white);
+  padding: var(--spacing-md) var(--spacing-lg);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-xl);
   backdrop-filter: blur(10px);
 }
 
 .navbar-pri {
   flex: 1;
-  margin-right: 20px;
+  margin-right: var(--spacing-lg);
 }
 
 .navbar-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--spacing-lg);
   flex-wrap: wrap;
 }
 
@@ -3034,36 +2464,36 @@ const setLocationFromSearch = async (place) => {
 .filters-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
   flex-wrap: wrap;
 }
 
 .filters-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   position: relative;
 }
 
 .visible-filters {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .nav-filter {
-  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
-  padding: 8px 16px;
-  border-radius: 20px;
-  color: #1d1a1f;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-2xl);
+  color: var(--neutral-black);
   cursor: pointer;
   position: relative;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.3s ease;
+  gap: var(--spacing-xs);
+  transition: all var(--transition-normal);
   box-shadow: 0 2px 8px rgba(228, 232, 39, 0.3);
   border: 1px solid transparent;
 }
@@ -3075,7 +2505,7 @@ const setLocationFromSearch = async (place) => {
 }
 
 .filter-icon {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .filter-label {
@@ -3084,12 +2514,12 @@ const setLocationFromSearch = async (place) => {
 
 .more-filters-btn {
   background: rgba(228, 232, 39, 0.2);
-  border: 1px solid #e4e827;
-  padding: 8px 12px;
-  border-radius: 20px;
-  color: #e4e827;
+  border: 1px solid var(--primary-500);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-2xl);
+  color: var(--primary-500);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3097,8 +2527,8 @@ const setLocationFromSearch = async (place) => {
 }
 
 .more-filters-btn:hover {
-  background: #e4e827;
-  color: #1d1a1f;
+  background: var(--primary-500);
+  color: var(--neutral-black);
   transform: translateY(-2px);
 }
 
@@ -3108,19 +2538,19 @@ const setLocationFromSearch = async (place) => {
   left: 0;
   right: 0;
   background: rgba(29, 26, 31, 0.95);
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 8px;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-sm);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(228, 232, 39, 0.3);
-  z-index: 1000;
+  z-index: var(--z-dropdown);
 }
 
 .hidden-filters.show {
@@ -3132,16 +2562,16 @@ const setLocationFromSearch = async (place) => {
 .clear-all-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  color: white;
+  border-radius: var(--radius-2xl);
+  color: var(--neutral-white);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
 }
 
 .clear-all-btn:hover {
@@ -3158,12 +2588,12 @@ const setLocationFromSearch = async (place) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #1d1a1f;
-  border-radius: 50%;
-  border: 2px solid #e4e827;
-  color: #e4e827;
-  font-size: 11px;
-  font-weight: 700;
+  background: var(--neutral-800);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--primary-500);
+  color: var(--primary-500);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   animation: pulse 2s infinite;
 }
 
@@ -3175,10 +2605,10 @@ const setLocationFromSearch = async (place) => {
 .form-switch .form-check-input {
   width: 35px;
   height: 20px;
-  background-color: #e4e827;
-  border: 2px solid #1d1a1f;
-  border-radius: 30px;
-  transition: all 0.3s ease-in-out;
+  background-color: var(--primary-500);
+  border: 2px solid var(--neutral-800);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-normal);
   position: relative;
   cursor: pointer;
 }
@@ -3190,44 +2620,47 @@ const setLocationFromSearch = async (place) => {
   left: 1px;
   height: 14px;
   width: 14px;
-  background-color: #1d1a1f;
-  border-radius: 50%;
-  transition: all 0.3s ease-in-out;
+  background-color: var(--neutral-800);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-normal);
 }
 
 .form-switch .form-check-input:checked {
-  background-color: #1d1a1f;
-  border-color: #e4e827;
+  background-color: var(--neutral-800);
+  border-color: var(--primary-500);
 }
 
 .form-switch .form-check-input:checked::before {
   transform: translateX(15px);
-  background-color: #e4e827;
+  background-color: var(--primary-500);
 }
 
 .form-check-label {
-  margin-left: 8px;
-  font-weight: 600;
-  color: #f8f9fa;
-  font-size: 14px;
+  margin-left: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--neutral-50);
+  font-size: var(--font-size-sm);
 }
 
-/* Profile Section */
+/* =============================================
+   NAVBAR PROFILE SECTION
+   ============================================= */
+
 .navbar-profile {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .friends-search-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
 }
 
 .search-friends-container {
   max-width: 0;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .search-friends-container.expanded {
@@ -3236,11 +2669,11 @@ const setLocationFromSearch = async (place) => {
 
 .friends-toggle-btn {
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  color: #e4e827;
-  font-size: 18px;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-normal);
+  color: var(--primary-500);
+  font-size: var(--font-size-lg);
 }
 
 .friends-toggle-btn:hover {
@@ -3249,7 +2682,7 @@ const setLocationFromSearch = async (place) => {
 }
 
 .active-icon {
-  color: #e4e827 !important;
+  color: var(--primary-500) !important;
   transform: scale(1.2);
 }
 
@@ -3260,12 +2693,12 @@ const setLocationFromSearch = async (place) => {
 .notification-bell {
   position: relative;
   display: inline-block;
-  font-size: 20px;
-  color: #e4e827;
+  font-size: var(--font-size-xl);
+  color: var(--primary-500);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-normal);
 }
 
 .notification-bell:hover {
@@ -3279,9 +2712,9 @@ const setLocationFromSearch = async (place) => {
   right: 4px;
   width: 8px;
   height: 8px;
-  background-color: #ff4757;
-  border-radius: 50%;
-  border: 2px solid white;
+  background-color: var(--accent-error);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--neutral-white);
   animation: pulse 2s infinite;
 }
 
@@ -3290,35 +2723,35 @@ const setLocationFromSearch = async (place) => {
   top: 100%;
   right: 0;
   width: 280px;
-  background: white;
-  color: #333;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  z-index: 1050;
+  background: var(--neutral-white);
+  color: var(--neutral-800);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-modal);
   overflow: hidden;
-  margin-top: 8px;
+  margin-top: var(--spacing-sm);
   border: 1px solid rgba(228, 232, 39, 0.3);
 }
 
 .dropdown-header {
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
-  color: #1d1a1f;
-  font-weight: 600;
-  font-size: 14px;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  color: var(--neutral-800);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
 }
 
 .friend-request-item {
-  padding: 12px 16px;
+  padding: var(--spacing-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--neutral-200);
+  transition: background var(--transition-fast);
 }
 
 .friend-request-item:hover {
-  background: #f8f9fa;
+  background: var(--neutral-50);
 }
 
 .friend-request-item:last-child {
@@ -3326,20 +2759,20 @@ const setLocationFromSearch = async (place) => {
 }
 
 .friend-name {
-  font-weight: 500;
-  color: #333;
+  font-weight: var(--font-weight-medium);
+  color: var(--neutral-800);
 }
 
 .accept-btn {
-  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
-  color: #1d1a1f;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  color: var(--neutral-800);
   border: none;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-2xl);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .accept-btn:hover {
@@ -3352,17 +2785,17 @@ const setLocationFromSearch = async (place) => {
 }
 
 .trip-btn {
-  background: linear-gradient(135deg, #e4e827 0%, #f0f442 100%);
-  color: #1d1a1f;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+  color: var(--neutral-800);
   border: none;
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-weight: 600;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-2xl);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs);
   box-shadow: 0 2px 8px rgba(228, 232, 39, 0.3);
 }
 
@@ -3372,7 +2805,7 @@ const setLocationFromSearch = async (place) => {
 }
 
 .trip-btn-text {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .profile-section {
@@ -3384,10 +2817,10 @@ const setLocationFromSearch = async (place) => {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-2xl);
+  transition: all var(--transition-normal);
 }
 
 .profile-icon:hover {
@@ -3397,14 +2830,14 @@ const setLocationFromSearch = async (place) => {
 .profile-icon-circle {
   height: 40px;
   width: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   overflow: hidden;
-  border: 2px solid #e4e827;
-  transition: all 0.3s ease;
+  border: 2px solid var(--primary-500);
+  transition: all var(--transition-normal);
 }
 
 .profile-icon-circle:hover {
-  border-color: #f0f442;
+  border-color: var(--primary-400);
   transform: scale(1.05);
 }
 
@@ -3415,9 +2848,9 @@ const setLocationFromSearch = async (place) => {
 }
 
 .profile-arrow {
-  color: #e4e827;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  color: var(--primary-500);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-normal);
 }
 
 .profile-floating-div {
@@ -3425,34 +2858,515 @@ const setLocationFromSearch = async (place) => {
   top: 100%;
   right: 0;
   width: 200px;
-  background: white;
-  color: #333;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  z-index: 1050;
+  background: var(--neutral-white);
+  color: var(--neutral-800);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-modal);
   overflow: hidden;
-  margin-top: 8px;
+  margin-top: var(--spacing-sm);
   border: 1px solid rgba(228, 232, 39, 0.3);
 }
 
 .profile-menu-item {
-  padding: 12px 16px;
+  padding: var(--spacing-md);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-fast);
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 500;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .profile-menu-item:hover {
-  background: #f8f9fa;
+  background: var(--neutral-50);
 }
 
 .profile-menu-item i {
   width: 16px;
+  color: var(--neutral-600);
+}
+
+/* =============================================
+   MAIN LAYOUT
+   ============================================= */
+
+.main-container {
+  display: flex;
+}
+
+.main-content-container {
+  width: 100%;
+  height: 100vh;
+  flex: 1;
+}
+
+/* =============================================
+   POPOVER STYLES
+   ============================================= */
+
+.custom-popover {
+  position: absolute;
+  background-color: var(--neutral-white);
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-md);
+  width: 250px;
+  z-index: var(--z-popover);
+  font-family: var(--font-family-primary);
+  transition: opacity var(--transition-normal);
+}
+
+.custom-popover h3 {
+  margin-top: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--neutral-800);
+}
+
+.custom-popover .card-img {
+  width: 100%;
+  height: auto;
+  margin-top: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.custom-popover p {
+  margin: var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--neutral-600);
+}
+
+.custom-popover button {
+  margin-top: var(--spacing-sm);
+  margin-right: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background-color: var(--primary-600);
+  color: var(--neutral-white);
+  transition: background-color var(--transition-normal);
+}
+
+.custom-popover button:hover {
+  background-color: var(--primary-700);
+}
+
+/* =============================================
+   CHAT CONTAINER STYLES
+   ============================================= */
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--neutral-white);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  border: 1px solid var(--neutral-200);
+  padding-top: 4rem;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  color: var(--neutral-white);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.trip-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.chat-name {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.chat-subtitle {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+  font-weight: var(--font-weight-normal);
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--neutral-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(10px);
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.chat-messages {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  background: var(--neutral-50);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: var(--neutral-100);
+  border-radius: var(--radius-sm);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--neutral-300);
+  border-radius: var(--radius-sm);
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-400);
+}
+
+.message-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.message-wrapper.own-message {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 75%;
+  background: var(--neutral-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--neutral-200);
+  position: relative;
+}
+
+.own-message .message-bubble {
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  color: var(--neutral-white);
+  border-color: transparent;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+  gap: var(--spacing-sm);
+}
+
+.sender-name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  color: var(--neutral-600);
+}
+
+.own-message .sender-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.message-time {
+  font-size: var(--font-size-xs);
+  color: var(--neutral-400);
+  white-space: nowrap;
+}
+
+.own-message .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message-content {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--neutral-700);
+  word-wrap: break-word;
+}
+
+.own-message .message-content {
+  color: var(--neutral-white);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+  color: var(--neutral-500);
+}
+
+.empty-icon {
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--neutral-700);
+}
+
+.empty-subtext {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  color: var(--neutral-400);
+}
+
+.chat-input-container {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--neutral-white);
+  border-top: 1px solid var(--neutral-200);
+}
+
+.input-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-sm) !important;
+  border-radius: var(--radius-2xl) !important;
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-md) !important;
+  border: 1px solid var(--neutral-200) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.input-wrapper input {
+  border: none;
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(228, 232, 39, 0.1);
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-md) 0;
+  color: var(--neutral-700);
+}
+
+.chat-input::placeholder {
+  color: var(--neutral-400);
+}
+
+.send-btn {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--neutral-black);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(228, 232, 39, 0.3);
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--neutral-500);
+}
+
+.typing-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.typing-dots span {
+  width: 4px;
+  height: 4px;
+  background: var(--neutral-400);
+  border-radius: var(--radius-full);
+  animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* =============================================
+   YOUTUBE STYLES
+   ============================================= */
+
+.youtube-input-section {
+  background: var(--neutral-50);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-200);
+}
+
+.youtube-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.youtube-preview-card {
+  background: var(--neutral-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.youtube-preview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.youtube-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 85px;
+  overflow: hidden;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.youtube-info {
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.youtube-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.youtube-gallery-item {
+  cursor: pointer;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.youtube-gallery-item:hover {
+  background-color: #f8f9fa;
+}
+
+.youtube-thumbnail-small {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.youtube-thumbnail-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play-overlay-small {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-label {
+  font-size: 11px;
   color: #666;
+}
+.input-group-youtube {
+  margin-top: 2rem !important;
+  width: 90% !important;
+  flex-wrap: nowrap !important;
 }
 
 /* Animations */

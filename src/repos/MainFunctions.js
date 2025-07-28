@@ -5,28 +5,41 @@ import mapMarkerStar from "../assets/mapMarkerStar.png";
 import locationPin from "../assets/location-pin.png";
 
 
-export const createMarkers = (locations,markers,map,selectedLocation,popoverPosition) => {
-  // debugger;
+export const createMarkers = (locations,markers,map,selectedLocation,popoverPosition,markersUrl) => {
+  debugger;
   markers.forEach((marker) => marker.remove());
   markers.length = 0;
   locations.forEach((location) => {
     let locationCor = location.location.coordinates;
     const markerEl = document.createElement("img");
-    switch (location.recommendation) {
-      case "Recommended":
-        markerEl.src = mapMarkerStar;
-        break;
-      case "Visited":
-        markerEl.src = locationPin;
-        break;
-      case "Not to visit":
-        markerEl.src = crossmapmarker;
-        break;
-      default:
-        markerEl.src = markerImage;
+    const matchingMarker = markersUrl.value.find(
+      (item) => {
+        let label = item.label;
+       return label == location?.recommendation?.toLowerCase(); 
+      }
+    );
+
+    if (matchingMarker && matchingMarker.image && matchingMarker.image.url) {
+      markerEl.src = matchingMarker.image.url;
+    }
+    else{
+      switch (location.recommendation) {
+        case "Recommended":
+          markerEl.src = mapMarkerStar;
+          break;
+        case "Visited":
+          markerEl.src = locationPin;
+          break;
+        case "Not to visit":
+          markerEl.src = crossmapmarker;
+          break;
+        default:
+          markerEl.src = markerImage;
+      }
     }
     markerEl.style.width = "30px";
     markerEl.style.height = "30px";
+    markerEl.style.borderRadius = "50%"
     markerEl.dataset.id = location._id;
     let marker = new maplibregl.Marker({ element: markerEl })
       .setLngLat(locationCor)
@@ -35,10 +48,28 @@ export const createMarkers = (locations,markers,map,selectedLocation,popoverPosi
     markerEl.addEventListener("click", () => {
       selectedLocation.value = location;
 
-      const [lng, lat] = location.location.coordinates;
-      const point = map.value.project([lng, lat]);
+      // const [lng, lat] = location.location.coordinates;
+      // const point = map.value.project([lng, lat]);
 
-      popoverPosition.value = { x: point.x, y: point.y };
+      // popoverPosition.value = { x: point.x, y: point.y };
+
+      const mapContainer = document.getElementById('map');
+      
+      // Calculate smart position
+      let smartPosition = calculatePopoverPosition(
+        map.value,
+        location.location.coordinates,
+        null, // You can pass the actual popover element if available
+        mapContainer
+      );
+          if (smartPosition) {
+        popoverPosition.value = {
+          x: smartPosition.x,
+          y: smartPosition.y
+        };
+      }
+      debugger
+      
     });
     markers.push(marker);
   });
@@ -165,3 +196,44 @@ export const removeTripLine = (map) => {
     map.value.removeSource("tripLine");
   }
 };
+export const calculatePopoverPosition = (map, coordinates, popoverElement, mapContainer) => {
+  if (!map || !coordinates || !mapContainer) return { x: 0, y: 0 };
+
+  const [lng, lat] = coordinates;
+  const point = map.project([lng, lat]);
+
+  const mapRect = mapContainer.getBoundingClientRect();
+  const mapWidth = mapRect.width;
+  const mapHeight = mapRect.height;
+
+  // Fallback size
+  let popoverWidth = 300;
+  let popoverHeight = 200;
+
+  if (popoverElement) {
+    const rect = popoverElement.getBoundingClientRect();
+    if (rect.width) popoverWidth = rect.width;
+    if (rect.height) popoverHeight = rect.height;
+  }
+
+  // Initial position (to right and below marker)
+  let x = point.x + 10;
+  let y = point.y + 10;
+
+  // Adjust horizontal if overflow
+  if (x + popoverWidth > mapWidth) {
+    x = point.x - popoverWidth - 10;
+  }
+
+  // Adjust vertical if overflow
+  if (y + popoverHeight > mapHeight) {
+    y = point.y - popoverHeight - 10;
+  }
+
+  // Clamp to stay within map bounds (margin 10px)
+  x = Math.max(10, Math.min(x, mapWidth - popoverWidth - 10));
+  y = Math.max(10, Math.min(y, mapHeight - popoverHeight - 10));
+
+  return { x, y };
+};
+

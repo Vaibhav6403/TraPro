@@ -68,7 +68,10 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
             </svg>
-            Weather & Notes
+            View More
+          </button>
+          <button @click="addLocationToTrip" v-if="isMainComponent" class="action-btn info">
+            <i class="fa-solid fa-location-dot"></i>
           </button>
         </div>
       </div>
@@ -77,6 +80,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
+const isMainComponent = ref(true)
 
 // Props
 const props = defineProps({
@@ -92,7 +98,7 @@ const props = defineProps({
     type:Object
   }
 })
-const emit = defineEmits(['toggle-info-display','close-info-display'])
+const emit = defineEmits(['toggle-info-display','close-info-display','add-location-trip'])
 const closeLocationInfo = () =>{
   emit('close-info-display')
 }
@@ -100,9 +106,13 @@ const toggleInfoDisplay = () =>{
   emit('toggle-info-display');
 }
 
+const addLocationToTrip = ()=>{
+  emit('add-location-trip')
+}
+
 
 onMounted(()=>{
-    debugger
+  isMainComponent.value =  route.path.includes('shared-trip') ? false :true;
    
 })
 
@@ -169,9 +179,12 @@ const popoverStyle = computed(() => {
   border-radius: 20px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
   max-width: 90vw;
+  max-height: 400px;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-width: thin;
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   animation: popoverEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
