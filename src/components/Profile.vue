@@ -348,7 +348,7 @@ const sendResetEmail = async () => {
         },
       }
     );
-    toast.success('successfull');
+    toast.success('Password Reset Successful');
     profileData.username = response.data.user.username;
     profileData.firstName = response.data.user.firstname;
     profileData.lastName = response.data.user.lastname;
@@ -388,7 +388,7 @@ const toggleEdit = async() => {
         },
       }
     );
-    toast.success('successfull');
+    toast.success('User Edited Successfully');
   }
   catch(error){
     toast.error(
@@ -424,7 +424,7 @@ const handleAvatarUpload = async (event) => {
       }
     );
     profileData.avatar = response.data.user.image.url;
-    toast.success('successfull');
+    toast.success('Avatar Edited Successfully');
   } catch (error) {
     toast.error(
       error.response?.data?.message ,

@@ -743,280 +743,314 @@
                     </div>
                   </div>
 
-                  <!-- Two Column Layout -->
-                  <div class="row">
-                    <div class="col-md-6">
-                      <!-- <div class="form-group mb-3">
-
-                        <select
-                          id="locationType"
-                          v-model="locationData.locationType"
-                          class="form-select"
-                          required
-                        >
-                          <option
-                            v-for="option in locationData.locationOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div> -->
-
-                      <!-- Experience Type -->
-                      <div class="form-group mb-3">
-                        <select
-                          id="experienceType"
-                          v-model="locationData.experienceType"
-                          class="form-select"
-                          required
-                        >
-                          <option value="" disabled selected hidden>
-                            Experience Type
-                          </option>
-                          <option
-                            v-for="option in locationData.experienceOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-
-                      <!-- Preference -->
-                      <div class="form-group mb-3">
-                        <select
-                          id="preference"
-                          v-model="locationData.preference"
-                          class="form-select"
-                        >
-                          <option value="" disabled selected hidden>
-                            Preference
-                          </option>
-                          <option
-                            v-for="option in locationData.preferenceOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-
-                      <!-- Mood-based -->
-                      <div class="form-group mb-3">
-                        <select
-                          id="moodBased"
-                          v-model="locationData.moodBased"
-                          class="form-select"
-                        >
-                          <option value="" disabled selected hidden>
-                            Mood
-                          </option>
-                          <option
-                            v-for="option in locationData.moodOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div class="col-md-6">
-                      <!-- Time of Day -->
-                      <div class="form-group mb-3">
-                        <select
-                          id="timeOfDay"
-                          v-model="locationData.timeOfDay"
-                          class="form-select"
-                        >
-                          <option value="" disabled selected hidden>
-                            Best Time to Visit
-                          </option>
-                          <option
-                            v-for="option in locationData.timeOfDayOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-
-                      <!-- Mode of Transport -->
-                      <div class="form-group mb-3">
-                        <select
-                          id="modeOfTransport"
-                          v-model="locationData.modeOfTransport"
-                          class="form-select"
-                        >
-                          <option value="" disabled selected hidden>
-                            Transportation
-                          </option>
-                          <option
-                            v-for="option in locationData.modeOfTransportOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-
-                      <!-- Recommendation -->
-                      <div class="form-group mb-3">
-                        <select
-                          id="recommended"
-                          v-model="locationData.recommendation"
-                          class="form-select"
-                        >
-                          <option value="" disabled selected hidden>
-                            Recommendation
-                          </option>
-                          <option
-                            v-for="option in locationData.recommendationOptions"
-                            :key="option"
-                            :value="option"
-                          >
-                            {{ option }}
-                          </option>
-                        </select>
-                      </div>
-
-                      <!-- Price -->
-                      <div class="form-group mb-3">
-                        <!-- <div class="input-wrapper"> -->
-                        <input
-                          type="text"
-                          id="price"
-                          v-model="locationData.price"
-                          class="form-control"
-                          placeholder=" "
-                        />
-                        <label for="price" class="floating-label">
-                          <i class="fas fa-dollar-sign me-2"></i>Price Range
-                        </label>
-                        <!-- </div> -->
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Rating -->
-                  <div class="mt-2 mb-2">
-                    <StarComponent
-                      :maxStars="5"
-                      @update:rating="selectedRating = $event"
-                    />
-                  </div>
-
-                  <!-- Comments -->
-                  <div class="form-group mb-3 mt-3">
-                    <!-- <div class="input-wrapper"> -->
-                    <input
-                      type="text"
-                      id="price"
-                      v-model="locationData.comments"
-                      class="form-control"
-                      placeholder=" "
-                    />
-                    <label for="price" class="floating-label">
-                      <i class="fa-solid fa-comment me-2"></i>Comments
-                    </label>
-                    <!-- </div> -->
-                  </div>
-
-                  <!-- Image Upload -->
-                  <div class="form-group mb-3">
-                    <label class="form-label">
-                      <i class="fas fa-camera me-2"></i>Add Images
-                    </label>
-                    <div class="file-upload-wrapper">
-                      <input
-                        type="file"
-                        @change="handleFileChange"
-                        accept="image/*"
-                        class="file-input"
-                        id="imageUpload"
-                        required
-                      />
-                      <label for="imageUpload" class="file-upload-label">
-                        <i class="fas fa-cloud-upload-alt me-2"></i>
-                        Choose Image or Drag & Drop
-                      </label>
-                    </div>
-                  </div>
-
-                  <!-- Youtube Link -->
-                  <div class="form-group mb-3">
-                    <label class="form-label">
-                      <i class="fab fa-youtube me-2 text-danger"></i>Related
-                      Videos
-                    </label>
-
-                    <!-- Single input with add button for new links -->
-                    <div class="youtube-input-section mb-3 mt-5">
-                      <div class="input-group-youtube input-group">
-                        <span class="input-group-text">
-                          <i class="fab fa-youtube text-danger"></i>
-                        </span>
-                        <input
-                          type="url"
-                          v-model="newYouTubeLink"
-                          class="form-control"
-                          placeholder="Paste YouTube URL here..."
-                          @keyup.enter="addYouTubeLink"
-                        />
-                        <button
-                          type="button"
-                          class="btn btn-primary"
-                          @click="addYouTubeLink"
-                          :disabled="!isValidYouTubeUrl(newYouTubeLink)"
-                        >
-                          <i class="fas fa-plus"></i>
-                        </button>
-                      </div>
-                      <small class="form-text text-muted mt-1">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Add YouTube videos that showcase this location
-                      </small>
-                    </div>
-
-                    <!-- Display added links with thumbnails -->
-                    <div
-                      v-if="locationData.youtubeLinks.length > 0"
-                      class="youtube-preview-grid"
+                  <ul class="nav nav-tabs" role="tablist">
+                    <li
+                      v-for="tab in tabs"
+                      :key="tab.id"
+                      class="nav-item"
+                      role="presentation"
                     >
-                      <div
-                        v-for="(link, index) in locationData.youtubeLinks"
-                        :key="index"
-                        class="youtube-preview-card"
+                      <button
+                        class="nav-link"
+                        :class="{ active: activeTab === tab.id }"
+                        type="button"
+                        role="tab"
+                        @click="setActiveTab(tab.id)"
                       >
-                        <div class="youtube-thumbnail">
-                          <img
-                            :src="getYouTubeThumbnail(link)"
-                            :alt="`Video ${index + 1}`"
-                            class="thumbnail-img"
-                          />
-                          <div class="play-overlay">
-                            <i class="fas fa-play"></i>
+                        <i :class="tab.icon + ' me-2'"></i>{{ tab.label }}
+                      </button>
+                    </li>
+                  </ul>
+
+                  <div class="tab-content">
+                    <!-- DETAILS TAB -->
+                    <div
+                      v-show="activeTab === 'details'"
+                      class="tab-pane"
+                      role="tabpanel"
+                    >
+                      <div class="row">
+                        <div class="col-md-6">
+                          <!-- Experience Type -->
+                          <div class="form-group mb-3">
+                            <select
+                              id="experienceType"
+                              v-model="locationData.experienceType"
+                              class="form-select"
+                              required
+                            >
+                              <option value="" disabled selected hidden>
+                                Experience Type
+                              </option>
+                              <option
+                                v-for="option in locationData.experienceOptions"
+                                :key="option"
+                                :value="option"
+                              >
+                                {{ option }}
+                              </option>
+                            </select>
+                          </div>
+
+                          <!-- Time of Day -->
+                          <div class="form-group mb-3">
+                            <select
+                              id="timeOfDay"
+                              v-model="locationData.timeOfDay"
+                              class="form-select"
+                            >
+                              <option value="" disabled selected hidden>
+                                Best Time to Visit
+                              </option>
+                              <option
+                                v-for="option in locationData.timeOfDayOptions"
+                                :key="option"
+                                :value="option"
+                              >
+                                {{ option }}
+                              </option>
+                            </select>
+                          </div>
+                          </div>
+                          <div class="col-md-6">
+                          <!-- Mode of Transport -->
+                          <div class="form-group mb-3">
+                            <select
+                              id="modeOfTransport"
+                              v-model="locationData.modeOfTransport"
+                              class="form-select"
+                            >
+                              <option value="" disabled selected hidden>
+                                Transportation
+                              </option>
+                              <option
+                                v-for="option in locationData.modeOfTransportOptions"
+                                :key="option"
+                                :value="option"
+                              >
+                                {{ option }}
+                              </option>
+                            </select>
+                          </div>
+                          <!-- Price -->
+                          <div class="form-group mb-3">
+                            <div class="input-wrapper">
+                              <input
+                                type="text"
+                                id="price"
+                                v-model="locationData.price"
+                                class="form-control"
+                                placeholder=" "
+                              />
+                              <label for="price" class="floating-label">
+                                <i class="fas fa-dollar-sign me-2"></i>Price
+                                Range
+                              </label>
+                            </div>
+                          </div>
+                          </div>
+
+                        <div class="col-md-12">
+
+                          <!-- Rating -->
+                          <div class="form-group mb-3">
+                            <label class="form-label">
+                              <i class="fas fa-star me-2"></i>Rating
+                            </label>
+                            <StarComponent
+                              :maxStars="5"
+                              @update:rating="selectedRating = $event"
+                            />
+                          </div>
+
+                          <!-- Comments -->
+                          <div class="form-group mb-3">
+                            <div class="input-wrapper">
+                              <input
+                                type="text"
+                                id="comments"
+                                v-model="locationData.comments"
+                                class="form-control"
+                                placeholder=" "
+                              />
+                              <label for="comments" class="floating-label">
+                                <i class="fa-solid fa-comment me-2"></i>Comments
+                              </label>
+                            </div>
                           </div>
                         </div>
-                        <div class="youtube-info">
-                          <small class="youtube-title"
-                            >Video {{ index + 1 }}</small
+                      </div>
+                    </div>
+
+                    <!-- PREFERENCES TAB -->
+                    <div
+                      v-show="activeTab === 'preferences'"
+                      class="tab-pane"
+                      role="tabpanel"
+                    >
+                      <div class="row">
+                        <div class="col-md-6">
+                          <!-- Preference -->
+                          <div class="form-group mb-3">
+                            <select
+                              id="preference"
+                              v-model="locationData.preference"
+                              class="form-select"
+                            >
+                              <option value="" disabled selected hidden>
+                                Preference
+                              </option>
+                              <option
+                                v-for="option in locationData.preferenceOptions"
+                                :key="option"
+                                :value="option"
+                              >
+                                {{ option }}
+                              </option>
+                            </select>
+                          </div>
+
+                          <!-- Mood-based -->
+                          <div class="form-group mb-3">
+                            <select
+                              id="moodBased"
+                              v-model="locationData.moodBased"
+                              class="form-select"
+                            >
+                              <option value="" disabled selected hidden>
+                                Mood
+                              </option>
+                              <option
+                                v-for="option in locationData.moodOptions"
+                                :key="option"
+                                :value="option"
+                              >
+                                {{ option }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <!-- Recommendation -->
+                          <div class="form-group mb-3">
+                            <select
+                              id="recommended"
+                              v-model="locationData.recommendation"
+                              class="form-select"
+                            >
+                              <option value="" disabled selected hidden>
+                                Recommendation
+                              </option>
+                              <option
+                                v-for="option in locationData.recommendationOptions"
+                                :key="option"
+                                :value="option"
+                              >
+                                {{ option }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- MEDIA TAB -->
+                    <div
+                      v-show="activeTab === 'media'"
+                      class="tab-pane"
+                      role="tabpanel"
+                    >
+                      <!-- Image Upload -->
+                      <div class="form-group mb-3">
+                        <label class="form-label">
+                          <i class="fas fa-camera me-2"></i>Add Images
+                        </label>
+                        <div class="file-upload-wrapper">
+                          <input
+                            type="file"
+                            @change="handleFileChange"
+                            accept="image/*"
+                            class="file-input"
+                            id="imageUpload"
+                            required
+                          />
+                          <label for="imageUpload" class="file-upload-label">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>
+                            Choose Image or Drag & Drop
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Youtube Link -->
+                      <div class="form-group mb-3">
+                        <label class="form-label">
+                          <i class="fab fa-youtube me-2 text-danger"></i>Related
+                          Videos
+                        </label>
+
+                        <!-- Single input with add button for new links -->
+                        <div class="youtube-input-section mb-3 mt-5">
+                          <div class="input-group-youtube input-group">
+                            <span class="input-group-text">
+                              <i class="fab fa-youtube text-danger"></i>
+                            </span>
+                            <input
+                              type="url"
+                              v-model="newYouTubeLink"
+                              class="form-control"
+                              placeholder="Paste YouTube URL here..."
+                              @keyup.enter="addYouTubeLink"
+                            />
+                            <button
+                              type="button"
+                              class="btn btn-primary"
+                              @click="addYouTubeLink"
+                              :disabled="!isValidYouTubeUrl(newYouTubeLink)"
+                            >
+                              <i class="fas fa-plus"></i>
+                            </button>
+                          </div>
+                          <small class="form-text text-muted mt-1">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Add YouTube videos that showcase this location
+                          </small>
+                        </div>
+
+                        <!-- Display added links with thumbnails -->
+                        <div
+                          v-if="locationData.youtubeLinks.length > 0"
+                          class="youtube-preview-grid"
+                        >
+                          <div
+                            v-for="(link, index) in locationData.youtubeLinks"
+                            :key="index"
+                            class="youtube-preview-card"
                           >
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger remove-btn"
-                            @click="removeYouTubeLink(index)"
-                            title="Remove video"
-                          >
-                            <i class="fas fa-trash-alt"></i>
-                          </button>
+                            <div class="youtube-thumbnail">
+                              <img
+                                :src="getYouTubeThumbnail(link)"
+                                :alt="`Video ${index + 1}`"
+                                class="thumbnail-img"
+                              />
+                              <div class="play-overlay">
+                                <i class="fas fa-play"></i>
+                              </div>
+                            </div>
+                            <div class="youtube-info">
+                              <small class="youtube-title"
+                                >Video {{ index + 1 }}</small
+                              >
+                              <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger remove-btn"
+                                @click="removeYouTubeLink(index)"
+                                title="Remove video"
+                              >
+                                <i class="fas fa-trash-alt"></i>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1216,14 +1250,14 @@
           <div class="social-clock__list" :class="{ open: isMenuOpen }">
             <button
               class="social-clock__button twitter"
-              title="Pointer"
+              title="Add clicked location"
               @click="togglePointer('click')"
             >
               <i class="fa-solid fa-arrow-pointer"></i>
             </button>
             <button
               class="social-clock__button github"
-              title="Location"
+              title="Add current location"
               @click="togglePointer('current')"
             >
               <i class="fa-solid fa-location-crosshairs"></i>
@@ -1425,6 +1459,26 @@ const shareUrl = ref("");
 const windowSize = ref({ width: 0, height: 0 });
 const markersUrl = ref([]);
 const newYouTubeLink = ref("");
+const activeTab = ref("details");
+
+// Tab configuration
+const tabs = ref([
+  {
+    id: "details",
+    label: "Details",
+    icon: "fas fa-info-circle",
+  },
+  {
+    id: "preferences",
+    label: "Preferences",
+    icon: "fas fa-heart",
+  },
+  {
+    id: "media",
+    label: "Media",
+    icon: "fas fa-camera",
+  },
+]);
 
 onMounted(() => {
   getUserLocation();
@@ -1482,6 +1536,7 @@ const getMarkersUrl = async () => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in getting markers url is", error);
   }
@@ -1664,6 +1719,7 @@ const socialModeChange = debounce(async () => {
       toast.error(error.response?.data?.message, {
         position: "top-right",
         autoClose: 4000,
+    hideProgressBar: true,
       });
     }
   } else {
@@ -1724,11 +1780,12 @@ const createTrip = async () => {
         },
       }
     );
-    toast.success("successfull");
+    toast.success("Trip Creation Successful");
   } catch (error) {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in creating trip is", error);
   }
@@ -1753,6 +1810,7 @@ const getTrips = async () => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in creating trip is", error);
   }
@@ -1917,7 +1975,7 @@ const addLocationsToTrip = async () => {
         },
       }
     );
-    toast.success("successfull");
+    toast.success("Location Added To Trip");
     console.log(response);
     isSidebarCollapsed.value = true;
     isAddLocationToTrip.value = false;
@@ -1925,6 +1983,7 @@ const addLocationsToTrip = async () => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in creating trip is", error);
     isSidebarCollapsed.value = true;
@@ -1960,6 +2019,7 @@ const shareTrip = async (trip) => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in accept friend request is", error);
   }
@@ -1968,20 +2028,20 @@ const shareTrip = async (trip) => {
 const exitTripView = () => {
   // Clear trip locations
   tripLocations.value = [];
-  
+
   // Reset selected index
   selectedIndex.value = null;
-  
+
   // Remove trip line from map
   removeTripLine();
-  
+
   // Clear existing markers
   markers.forEach((marker) => marker.remove());
   markers.length = 0;
-  
+
   // Reload regular locations
   getLocations();
-  
+
   // Close sidebar if it's showing trip details
   if (!isSidebarCollapsed.value && viewMoreInfo.value) {
     isSidebarCollapsed.value = true;
@@ -2007,7 +2067,7 @@ const acceptFriendRequest = async (friendUsername) => {
     );
     // debugger;
     if (response.status === 200) {
-      toast.success("successfull");
+      toast.success("Friend Request Accepted");
       friendRequests.value = friendRequests.value.filter(
         (username) => username !== friendUsername
       );
@@ -2017,6 +2077,7 @@ const acceptFriendRequest = async (friendUsername) => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in accept friend request is", error);
   }
@@ -2040,6 +2101,7 @@ const getFriendRequests = async () => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error("the error in the getting friend request is", error);
   }
@@ -2189,7 +2251,9 @@ const addLocation = async () => {
       }
     );
     if (response.status == 201) {
-      toast.success("successfull");
+      toast.success("Location Added Successfully",{
+    hideProgressBar: true,
+      });
       console.log("response", response);
       modalInstance.value.hide();
     }
@@ -2206,9 +2270,13 @@ const addLocation = async () => {
     toast.error(error.response?.data?.message, {
       position: "top-right",
       autoClose: 4000,
+    hideProgressBar: true,
     });
     console.error(error);
   }
+};
+const setActiveTab = (tabId) => {
+  activeTab.value = tabId;
 };
 function getUserLocation() {
   if (navigator.geolocation) {
@@ -2308,7 +2376,9 @@ const editLocation = async () => {
         },
       }
     );
-    toast.success("successfull");
+    toast.success("Location Edited Successfully",{
+    hideProgressBar: true,
+    });
     locations.value = [response.data];
 
     console.log(response);
@@ -3513,7 +3583,45 @@ const removeYouTubeLink = (index) => {
 .exit-btn i {
   font-size: 16px;
 }
+.nav-tabs .nav-link {
+  color: #6c757d;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
 
+.nav-tabs .nav-link.active {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd;
+  background: none;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd;
+}
+
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+.tab-pane {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* Animations */
 @keyframes pulse {

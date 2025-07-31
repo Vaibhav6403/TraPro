@@ -118,7 +118,7 @@ const submit = async () => {
   try {
     const response = await axios.post(`http://${import.meta.env.VITE_API_URL}/api/user/register`, request)
     console.log("response", response)
-    toast.success('successfull');
+    toast.success('Registration Successful');
     router.push('/login')
   }
   catch (error) {

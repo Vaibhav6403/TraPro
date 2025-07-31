@@ -18,7 +18,7 @@ function handleMouseMove(e) {
   mouseX.value = e.clientX - rect.left;
   mouseY.value = e.clientY - rect.top;
 
-  console.log('Relative to map container:', mouseX.value, mouseY.value);
+
 }
 
 </script>

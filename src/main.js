@@ -7,6 +7,8 @@ import router from './router/router';
 import 'leaflet/dist/leaflet.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'vue3-toastify/dist/index.css'
+import FloatingVue from 'floating-vue'
+import 'floating-vue/dist/style.css'
 
 
 
@@ -18,4 +20,8 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
-createApp(App).use(router).mount('#app')
+const app = createApp(App)
+app.use(router)
+app.use(FloatingVue) 
+app.mount('#app')
+

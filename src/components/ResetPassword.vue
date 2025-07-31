@@ -54,7 +54,7 @@ const resetPassword = async ()=>{
           },
         })
     if(response){
-        toast.success('successfull');
+        toast.success('Password Reset Successful');
         router.push('/profile')
     }
     

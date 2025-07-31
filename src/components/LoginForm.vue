@@ -91,6 +91,7 @@ const login = async ()=>{
               toast.success('Login successful!', {
         position: 'top-right',
         autoClose: 3000,
+    hideProgressBar: true,
       })
             router.push('/dashboard')
         }
@@ -101,6 +102,7 @@ const login = async ()=>{
       {
         position: 'top-right',
         autoClose: 4000,
+    hideProgressBar: true,
       }
     )
         console.error(error);
